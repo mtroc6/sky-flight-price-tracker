@@ -191,7 +191,7 @@ export default function RouteDetail() {
                 <span>Brak danych cenowych</span>
               )}
               <span className="text-text-muted">·</span>
-              <span>Auto: co 1h (7-22), co 3h (noc)</span>
+              <span>Auto: co ~1h w godz. 7:00-22:00, co ~3h w nocy (moze byc opoznione 5-50 min)</span>
             </div>
             <div className="flex items-center gap-3">
               {!canRefresh && remainingText && (
