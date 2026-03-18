@@ -5,11 +5,7 @@ import { desc, eq, and } from 'drizzle-orm'
 import { getMinPrice } from '../../src/lib/flights-api'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  try {
-    var db = getDb()
-  } catch (err) {
-    return res.status(500).json({ error: 'DB init failed: ' + (err as Error).message })
-  }
+  const db = getDb()
 
   if (req.method === 'GET') {
     try {
