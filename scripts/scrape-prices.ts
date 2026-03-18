@@ -54,83 +54,74 @@ async function scrapePrice(
     // Wait for flight results to load
     await page.waitForTimeout(3000)
 
-    // Try to find the cheapest price on the page
-    // Google Flights shows prices in various formats, we look for the first/best result
+    // Extract price from Google Flights results
+    // Strategy: find all price-like elements, collect them, pick the best flight price
     const priceResult = await page.evaluate(() => {
-      // Look for price elements — Google Flights uses various selectors
-      // Try common patterns for the best flight price
-      const priceSelectors = [
-        '[data-price]',
-        '.YMlIz',          // Common Google Flights price class
-        'span[aria-label*="zł"]',
-        'span[aria-label*="PLN"]',
-      ]
+      // Collect ALL prices on the page that look like flight prices
+      const prices: { price: number; element: Element }[] = []
 
-      let priceText: string | null = null
-
-      for (const selector of priceSelectors) {
-        const el = document.querySelector(selector)
-        if (el) {
-          // Try data-price attribute first
-          const dataPrice = el.getAttribute('data-price')
-          if (dataPrice) {
-            priceText = dataPrice
-            break
-          }
-          priceText = el.textContent
-          break
+      // Method 1: elements with aria-label containing price
+      document.querySelectorAll('[aria-label]').forEach(el => {
+        const label = el.getAttribute('aria-label') || ''
+        const match = label.match(/(\d[\d\s.,]*)\s*(zł|PLN)/i)
+        if (match) {
+          const price = parseInt(match[1].replace(/[\s.,]/g, ''), 10)
+          if (price > 50 && price < 50000) prices.push({ price, element: el })
         }
-      }
+      })
 
-      // Fallback: find any element containing a PLN price pattern
-      if (!priceText) {
-        const allElements = document.querySelectorAll('span, div')
-        for (const el of allElements) {
+      // Method 2: span/div elements with zł text
+      if (prices.length === 0) {
+        document.querySelectorAll('span, div').forEach(el => {
           const text = el.textContent || ''
-          // Match patterns like "509 zł", "1 234 zł", "PLN 509"
-          if (/\d[\d\s]*\s*zł/i.test(text) && text.length < 20) {
-            priceText = text
-            break
+          // Only match leaf elements (no children with prices) and short text
+          if (text.length > 30 || el.children.length > 2) return
+          const match = text.match(/^[\s]*(\d[\d\s.,]*)[\s]*zł[\s]*$/i)
+          if (match) {
+            const price = parseInt(match[1].replace(/[\s.,]/g, ''), 10)
+            if (price > 50 && price < 50000) prices.push({ price, element: el })
           }
-        }
+        })
       }
 
-      if (!priceText) return null
+      if (prices.length === 0) return null
 
-      // Extract numeric price
-      const cleaned = priceText.replace(/[^\d]/g, '')
-      const price = parseInt(cleaned, 10)
-      if (isNaN(price) || price === 0) return null
+      // Find the most common price range (likely actual flight prices, not ads)
+      // Sort prices and look for clusters
+      const sortedPrices = prices.map(p => p.price).sort((a, b) => a - b)
 
-      // Try to get airline name from the first result
+      // If there are prices in the 100-2000 range AND in the 200-5000 range,
+      // the lower ones might be "from X" labels. Take the median-area price.
+      // Simple heuristic: skip the bottom 20% of prices (likely "from X" teasers)
+      const skipCount = Math.floor(sortedPrices.length * 0.2)
+      const relevantPrices = sortedPrices.slice(skipCount)
+      const bestPrice = relevantPrices.length > 0 ? relevantPrices[0] : sortedPrices[0]
+
+      // Try to get airline name
       let airline = ''
-      const airlineSelectors = [
-        '.Ir0Voe .sSHqwe',  // Airline name in result
-        '[data-airline-name]',
-        '.h1fkLb',
+      const airlinePatterns = [
+        /Ryanair/i, /Wizz\s*Air/i, /LOT/i, /Lufthansa/i, /KLM/i,
+        /easyJet/i, /Norwegian/i, /TAP/i, /Vueling/i, /Iberia/i,
+        /Air France/i, /British Airways/i, /SAS/i, /Finnair/i,
+        /Turkish/i, /Emirates/i, /Qatar/i, /Swiss/i, /Austrian/i,
       ]
-      for (const sel of airlineSelectors) {
-        const el = document.querySelector(sel)
-        if (el?.textContent) {
-          airline = el.textContent.trim()
-          break
-        }
+      const pageText = document.body.innerText
+      for (const pattern of airlinePatterns) {
+        const match = pageText.match(pattern)
+        if (match) { airline = match[0]; break }
       }
 
-      // Try to get stops info
+      // Try to detect stops
       let stops = 0
-      const stopsEl = document.querySelector('.EfT7Ae .ogfYpf')
-      if (stopsEl?.textContent) {
-        const stopsText = stopsEl.textContent
-        if (/bezpo/i.test(stopsText) || /direct/i.test(stopsText) || /nonstop/i.test(stopsText)) {
-          stops = 0
-        } else {
-          const match = stopsText.match(/(\d+)/)
-          if (match) stops = parseInt(match[1], 10)
-        }
+      if (/bezpośredni|direct|nonstop/i.test(pageText.slice(0, 5000))) {
+        stops = 0
+      } else if (/1 przesiadka|1 stop/i.test(pageText.slice(0, 5000))) {
+        stops = 1
+      } else if (/2 przesiadk|2 stop/i.test(pageText.slice(0, 5000))) {
+        stops = 2
       }
 
-      return { price, airline, stops }
+      return { price: bestPrice, airline, stops }
     })
 
     return priceResult

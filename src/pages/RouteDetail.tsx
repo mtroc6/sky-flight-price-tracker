@@ -287,6 +287,71 @@ export default function RouteDetail() {
           />
         </div>
       )}
+
+      {/* Price history table */}
+      {filteredSnapshots.length > 0 && (
+        <div className="rounded-xl border border-border bg-bg-card">
+          <div className="border-b border-border px-4 py-3">
+            <h3 className="text-sm font-semibold text-text-primary">Historia cen</h3>
+          </div>
+          <div className="max-h-96 overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-bg-card">
+                <tr className="border-b border-border text-xs text-text-muted">
+                  <th className="px-4 py-2 text-left font-medium">Data</th>
+                  <th className="px-4 py-2 text-left font-medium">Cena</th>
+                  <th className="px-4 py-2 text-left font-medium">Zmiana</th>
+                  <th className="px-4 py-2 text-left font-medium">Linia</th>
+                  <th className="px-4 py-2 text-left font-medium">Przesiadki</th>
+                  <th className="px-4 py-2 text-left font-medium">Zrodlo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...filteredSnapshots].reverse().map((snap, i, arr) => {
+                  const prevSnap = arr[i + 1]
+                  const change = prevSnap ? snap.priceCents - prevSnap.priceCents : 0
+                  return (
+                    <tr key={snap.id} className="border-b border-border/30 hover:bg-bg-tertiary/50">
+                      <td className="px-4 py-2 font-mono text-xs text-text-secondary">
+                        {new Date(snap.fetchedAt).toLocaleString('pl-PL', {
+                          day: '2-digit', month: '2-digit', year: 'numeric',
+                          hour: '2-digit', minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="px-4 py-2 font-mono font-semibold text-text-primary">
+                        {(snap.priceCents / 100).toLocaleString('pl-PL')} PLN
+                      </td>
+                      <td className="px-4 py-2 font-mono text-xs">
+                        {change !== 0 && (
+                          <span className={change < 0 ? 'text-green' : 'text-red'}>
+                            {change > 0 ? '+' : ''}{(change / 100).toLocaleString('pl-PL')} PLN
+                          </span>
+                        )}
+                        {change === 0 && i < arr.length - 1 && (
+                          <span className="text-text-muted">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2 text-xs text-text-secondary">{snap.airline || '—'}</td>
+                      <td className="px-4 py-2 text-xs text-text-muted">
+                        {snap.stops === 0 ? 'Bezposredni' : `${snap.stops}`}
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                          snap.source === 'serpapi' ? 'bg-blue/10 text-blue' :
+                          snap.source === 'google' ? 'bg-accent/10 text-accent' :
+                          'bg-text-muted/10 text-text-muted'
+                        }`}>
+                          {snap.source === 'serpapi' ? 'SerpApi' : snap.source === 'google' ? 'Scraper' : snap.source}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
