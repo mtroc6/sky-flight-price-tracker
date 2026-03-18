@@ -124,85 +124,73 @@ export default function RouteDetail() {
 
       {/* Route header */}
       {route && (
-        <div className="rounded-xl border border-border bg-bg-card p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-2xl font-bold text-accent">{route.originCode}</span>
-                <svg className="h-5 w-5 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-                <span className="font-mono text-2xl font-bold text-accent">{route.destinationCode}</span>
+        <div className="rounded-xl border border-border bg-bg-card p-4 sm:p-6">
+          {/* Route + price row */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-xl font-bold text-accent sm:text-2xl">{route.originCode}</span>
+                <span className="text-text-muted">&rarr;</span>
+                <span className="font-mono text-xl font-bold text-accent sm:text-2xl">{route.destinationCode}</span>
                 {route.flightNumber && (
-                  <span className="rounded bg-blue/10 px-2 py-0.5 text-xs font-mono font-medium text-blue">
+                  <span className="rounded bg-blue/10 px-2 py-0.5 font-mono text-[10px] font-medium text-blue">
                     {route.flightNumber}
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm text-text-secondary">
+              <p className="mt-1 text-xs text-text-secondary sm:text-sm">
                 {route.originName} &rarr; {route.destinationName}
               </p>
-              <div className="mt-3 flex gap-4 text-xs text-text-muted">
-                <span>Wylot: {route.departureDate}</span>
-              </div>
-              {route.bestAirline && (
-                <div className="mt-3 flex items-center gap-4 rounded-lg bg-bg-tertiary px-3 py-2 text-sm">
-                  <span className="font-medium text-text-primary">{route.bestAirline}</span>
-                  {route.bestDepartureTime && route.bestArrivalTime && (
-                    <span className="font-mono text-text-secondary">
-                      {route.bestDepartureTime.split(' ')[1]?.slice(0, 5) || route.bestDepartureTime}
-                      {' → '}
-                      {route.bestArrivalTime.split(' ')[1]?.slice(0, 5) || route.bestArrivalTime}
-                    </span>
-                  )}
-                  {route.bestDuration != null && route.bestDuration > 0 && (
-                    <span className="text-text-muted">
-                      {Math.floor(route.bestDuration / 3600)}h {Math.floor((route.bestDuration % 3600) / 60)}m
-                    </span>
-                  )}
-                  <span className={route.bestStops === 0 ? 'text-green' : 'text-text-muted'}>
-                    {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
-                  </span>
-                </div>
-              )}
+              <p className="mt-1 text-xs text-text-muted">Wylot: {route.departureDate}</p>
             </div>
 
-            <div className="text-right">
-              {route.currentMinPrice != null && (
-                <>
-                  <PriceDisplay
-                    price={route.currentMinPrice / 100}
-                    previousPrice={route.previousMinPrice ? route.previousMinPrice / 100 : null}
-                    size="lg"
-                  />
-                  <p className="mt-1 text-xs text-text-muted">Aktualna najnizsza cena</p>
-                </>
-              )}
-            </div>
+            {route.currentMinPrice != null && (
+              <div className="sm:text-right">
+                <PriceDisplay
+                  price={route.currentMinPrice / 100}
+                  previousPrice={route.previousMinPrice ? route.previousMinPrice / 100 : null}
+                  size="lg"
+                />
+                <p className="text-xs text-text-muted">Aktualna cena</p>
+              </div>
+            )}
           </div>
 
-          {/* Last update + refresh */}
-          <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {route.lastChecked ? (
-                <span>Ostatnia aktualizacja: <span className="text-text-secondary">{lastCheckedAgo}</span></span>
-              ) : (
-                <span>Brak danych cenowych</span>
+          {/* Flight details */}
+          {route.bestAirline && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-bg-tertiary px-3 py-2 text-xs sm:text-sm">
+              <span className="font-medium text-text-primary">{route.bestAirline}</span>
+              {route.bestDepartureTime && route.bestArrivalTime && (
+                <span className="font-mono text-text-secondary">
+                  {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} → {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
+                </span>
               )}
-              <span className="text-text-muted">·</span>
-              <span>Auto: co ~1h w godz. 7:00-22:00, co ~3h w nocy (moze byc opoznione 5-50 min)</span>
+              {route.bestDuration != null && route.bestDuration > 0 && (
+                <span className="text-text-muted">
+                  {Math.floor(route.bestDuration / 3600)}h {Math.floor((route.bestDuration % 3600) / 60)}m
+                </span>
+              )}
+              <span className={route.bestStops === 0 ? 'text-green' : 'text-text-muted'}>
+                {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
+              </span>
+            </div>
+          )}
+
+          {/* Last update + refresh */}
+          <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
+              <span>{route.lastChecked ? `Aktualizacja: ${lastCheckedAgo}` : 'Brak danych'}</span>
+              <span className="hidden sm:inline">·</span>
+              <span className="text-[10px]">Auto: ~1h (7-22), ~3h (noc)</span>
             </div>
             <div className="flex items-center gap-3">
               {!canRefresh && remainingText && (
-                <span className="text-xs text-text-muted">Nastepne odswiezenie {remainingText}</span>
+                <span className="text-xs text-text-muted">{remainingText}</span>
               )}
               <button
                 onClick={handleRefresh}
                 disabled={!canRefresh || isRefreshing}
-                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-border disabled:hover:text-text-secondary"
+                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg
                   className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
@@ -210,21 +198,19 @@ export default function RouteDetail() {
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {isRefreshing ? 'Odswiezam...' : 'Odswiez cene'}
+                {isRefreshing ? 'Odswiezam...' : 'Odswiez'}
               </button>
             </div>
           </div>
           {refreshError && (
-            <div className="mt-2 rounded-lg bg-red-dim/10 px-3 py-2 text-xs text-red">
-              {refreshError}
-            </div>
+            <div className="mt-2 rounded-lg bg-red-dim/10 px-3 py-2 text-xs text-red">{refreshError}</div>
           )}
         </div>
       )}
 
       {/* Chart controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-1 rounded-lg bg-bg-secondary p-1">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-1 overflow-x-auto rounded-lg bg-bg-secondary p-1">
           {timeRanges.map((range) => (
             <button
               key={range}
@@ -268,7 +254,7 @@ export default function RouteDetail() {
 
       {/* Stats */}
       {filteredSnapshots.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           <StatBox
             label="Minimum"
             value={formatPrice(Math.min(...filteredSnapshots.map((s) => s.priceCents)))}
