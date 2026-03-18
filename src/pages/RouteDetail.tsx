@@ -158,35 +158,34 @@ export default function RouteDetail() {
 
           {/* Flight details */}
           {route.bestAirline && (
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-bg-tertiary px-3 py-2 text-xs sm:text-sm">
-              <span className="font-medium text-text-primary">{route.bestAirline}</span>
+            <div className="mt-3 space-y-0.5 rounded-lg bg-bg-tertiary px-3 py-2 text-xs sm:text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-text-primary">{route.bestAirline}</span>
+                <span className={route.bestStops === 0 ? 'text-green' : 'text-text-muted'}>
+                  {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
+                </span>
+              </div>
               {route.bestDepartureTime && route.bestArrivalTime && (
-                <span className="font-mono text-text-secondary">
-                  {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} → {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
-                </span>
+                <div className="flex items-center gap-2 font-mono text-text-muted">
+                  <span>
+                    {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} → {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
+                  </span>
+                  {route.bestDuration != null && route.bestDuration > 0 && (
+                    <span>
+                      {Math.floor(route.bestDuration / 3600)}h {Math.floor((route.bestDuration % 3600) / 60)}m
+                    </span>
+                  )}
+                </div>
               )}
-              {route.bestDuration != null && route.bestDuration > 0 && (
-                <span className="text-text-muted">
-                  {Math.floor(route.bestDuration / 3600)}h {Math.floor((route.bestDuration % 3600) / 60)}m
-                </span>
-              )}
-              <span className={route.bestStops === 0 ? 'text-green' : 'text-text-muted'}>
-                {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
-              </span>
             </div>
           )}
 
           {/* Last update + refresh */}
-          <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
-              <span>{route.lastChecked ? `Aktualizacja: ${lastCheckedAgo}` : 'Brak danych'}</span>
-              <span className="hidden sm:inline">·</span>
-              <span className="text-[10px]">Auto: ~1h (7-22), ~3h (noc)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              {!canRefresh && remainingText && (
-                <span className="text-xs text-text-muted">{remainingText}</span>
-              )}
+          <div className="mt-4 space-y-2 border-t border-border pt-4">
+            <p className="text-xs text-text-muted">
+              {route.lastChecked ? `Aktualizacja: ${lastCheckedAgo}` : 'Brak danych'}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleRefresh}
                 disabled={!canRefresh || isRefreshing}
@@ -200,6 +199,10 @@ export default function RouteDetail() {
                 </svg>
                 {isRefreshing ? 'Odswiezam...' : 'Odswiez'}
               </button>
+              {!canRefresh && remainingText && (
+                <span className="text-xs text-text-muted">{remainingText}</span>
+              )}
+              <span className="text-[10px] text-text-muted">Auto: ~1h (7-22), ~3h (noc)</span>
             </div>
           </div>
           {refreshError && (
@@ -209,13 +212,13 @@ export default function RouteDetail() {
       )}
 
       {/* Chart controls */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex gap-1 overflow-x-auto rounded-lg bg-bg-secondary p-1">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full gap-1 rounded-lg bg-bg-secondary p-1 sm:w-auto">
           {timeRanges.map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}
-              className={`rounded-md px-3 py-1 font-mono text-xs font-medium transition-colors ${
+              className={`flex-1 rounded-md px-3 py-1 text-center font-mono text-xs font-medium transition-colors sm:flex-none ${
                 timeRange === range
                   ? 'bg-accent/10 text-accent'
                   : 'text-text-muted hover:text-text-primary'
@@ -226,10 +229,10 @@ export default function RouteDetail() {
           ))}
         </div>
 
-        <div className="flex gap-1 rounded-lg bg-bg-secondary p-1">
+        <div className="flex w-full gap-1 rounded-lg bg-bg-secondary p-1 sm:w-auto">
           <button
             onClick={() => setChartType('candle')}
-            className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+            className={`flex-1 rounded-md px-3 py-1 text-center text-xs font-medium transition-colors sm:flex-none ${
               chartType === 'candle' ? 'bg-accent/10 text-accent' : 'text-text-muted hover:text-text-primary'
             }`}
           >
@@ -237,7 +240,7 @@ export default function RouteDetail() {
           </button>
           <button
             onClick={() => setChartType('line')}
-            className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+            className={`flex-1 rounded-md px-3 py-1 text-center text-xs font-medium transition-colors sm:flex-none ${
               chartType === 'line' ? 'bg-accent/10 text-accent' : 'text-text-muted hover:text-text-primary'
             }`}
           >
