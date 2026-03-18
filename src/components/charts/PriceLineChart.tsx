@@ -6,11 +6,16 @@ interface PriceLineChartProps {
   height?: number
 }
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
-  if (!active || !payload?.length) return null
+function formatDate(unix: number): string {
+  const d = new Date(unix * 1000)
+  return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
+}
+
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: number }) {
+  if (!active || !payload?.length || !label) return null
   return (
     <div className="rounded-lg border border-border bg-bg-secondary px-3 py-2 shadow-lg">
-      <p className="text-xs text-text-muted">{label}</p>
+      <p className="text-xs text-text-muted">{formatDate(label)}</p>
       <p className="font-mono text-sm font-semibold text-accent">
         {payload[0].value.toLocaleString('pl-PL')} PLN
       </p>
@@ -34,6 +39,9 @@ export function PriceLineChart({ data, height = 300 }: PriceLineChartProps) {
           <CartesianGrid strokeDasharray="3 3" stroke="#21262d" />
           <XAxis
             dataKey="time"
+            type="number"
+            domain={['dataMin', 'dataMax']}
+            tickFormatter={(v) => formatDate(v)}
             tick={{ fill: '#8b949e', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}
             tickLine={{ stroke: '#30363d' }}
             axisLine={{ stroke: '#30363d' }}
@@ -43,6 +51,7 @@ export function PriceLineChart({ data, height = 300 }: PriceLineChartProps) {
             tickLine={{ stroke: '#30363d' }}
             axisLine={{ stroke: '#30363d' }}
             tickFormatter={(v) => `${v} zl`}
+            domain={['auto', 'auto']}
           />
           <Tooltip content={<CustomTooltip />} />
           <Line
@@ -50,8 +59,8 @@ export function PriceLineChart({ data, height = 300 }: PriceLineChartProps) {
             dataKey="price"
             stroke="#00ff88"
             strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4, fill: '#00ff88', stroke: '#0d1117', strokeWidth: 2 }}
+            dot={{ r: 3, fill: '#00ff88', stroke: '#0d1117', strokeWidth: 2 }}
+            activeDot={{ r: 5, fill: '#00ff88', stroke: '#0d1117', strokeWidth: 2 }}
           />
         </LineChart>
       </ResponsiveContainer>

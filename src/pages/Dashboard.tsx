@@ -85,9 +85,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Tutorial - always visible */}
-      <div className="rounded-xl border border-border bg-bg-card p-6">
-        <h3 className="text-sm font-semibold text-text-primary">Jak dodac lot do sledzenia?</h3>
+      {/* Tutorial */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold text-text-primary">Jak dodac lot do sledzenia?</h2>
+        <div className="rounded-xl border border-border bg-bg-card p-6">
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <TutorialStep num={1} title="Wyszukaj lot" desc="Wejdz na google.com/travel/flights" />
           <TutorialStep num={2} title="Kliknij w lot" desc="Otworzy sie strona rezerwacji" />
@@ -101,6 +102,7 @@ export default function Dashboard() {
           >
             Dodaj lot
           </Link>
+        </div>
         </div>
       </div>
     </div>
