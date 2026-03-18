@@ -8,6 +8,7 @@ import { PriceDisplay } from '../components/common/PriceDisplay'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { snapshotsToOHLC, snapshotsToPricePoints, filterByTimeRange, bestIntervalForRange } from '../lib/chart-transforms'
 import { api } from '../lib/api-client'
+import { useCurrency } from '../lib/CurrencyContext'
 import { useQueryClient } from '@tanstack/react-query'
 import type { TimeRange } from '../types/chart'
 
@@ -80,6 +81,7 @@ export default function RouteDetail() {
   const [refreshError, setRefreshError] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
+  const { formatPrice } = useCurrency()
   const { data: routes } = useWatchlist()
   const { data: snapshots, isLoading } = usePriceHistory(routeId, timeRange)
 
@@ -269,17 +271,17 @@ export default function RouteDetail() {
         <div className="grid gap-4 sm:grid-cols-4">
           <StatBox
             label="Minimum"
-            value={`${(Math.min(...filteredSnapshots.map((s) => s.priceCents)) / 100).toLocaleString('pl-PL')} PLN`}
+            value={formatPrice(Math.min(...filteredSnapshots.map((s) => s.priceCents)))}
             type="green"
           />
           <StatBox
             label="Maksimum"
-            value={`${(Math.max(...filteredSnapshots.map((s) => s.priceCents)) / 100).toLocaleString('pl-PL')} PLN`}
+            value={formatPrice(Math.max(...filteredSnapshots.map((s) => s.priceCents)))}
             type="red"
           />
           <StatBox
             label="Srednia"
-            value={`${(filteredSnapshots.reduce((s, x) => s + x.priceCents, 0) / filteredSnapshots.length / 100).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} PLN`}
+            value={formatPrice(Math.round(filteredSnapshots.reduce((s, x) => s + x.priceCents, 0) / filteredSnapshots.length))}
           />
           <StatBox
             label="Punkty danych"
@@ -319,12 +321,12 @@ export default function RouteDetail() {
                         })}
                       </td>
                       <td className="px-4 py-2 font-mono font-semibold text-text-primary">
-                        {(snap.priceCents / 100).toLocaleString('pl-PL')} PLN
+                        {formatPrice(snap.priceCents)}
                       </td>
                       <td className="px-4 py-2 font-mono text-xs">
                         {change !== 0 && (
                           <span className={change < 0 ? 'text-green' : 'text-red'}>
-                            {change > 0 ? '+' : ''}{(change / 100).toLocaleString('pl-PL')} PLN
+                            {change > 0 ? '+' : ''}{formatPrice(Math.abs(change))}
                           </span>
                         )}
                         {change === 0 && i < arr.length - 1 && (

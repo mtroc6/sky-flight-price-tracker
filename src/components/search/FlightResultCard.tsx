@@ -72,7 +72,7 @@ export function FlightResultCard({ flight, onAddToWatchlist }: FlightResultCardP
 
         {/* Price + Actions */}
         <div className="flex flex-col items-end gap-2">
-          <PriceDisplay price={flight.price} currency={flight.priceCurrency} />
+          <PriceDisplay price={flight.price} />
 
           {onAddToWatchlist && (
             <button

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { useQuery } from '@tanstack/react-query'
+import { useCurrency } from '../lib/CurrencyContext'
 
 function useApiUsage() {
   return useQuery({
@@ -18,6 +19,7 @@ function useApiUsage() {
 export default function Dashboard() {
   const { data: routes, isLoading } = useWatchlist()
   const { data: usage } = useApiUsage()
+  const { formatPrice } = useCurrency()
 
   const activeRoutes = routes?.filter((r) => r.isActive) || []
 
@@ -109,7 +111,7 @@ export default function Dashboard() {
                   </div>
                   {route.currentMinPrice != null && (
                     <span className="font-mono text-sm font-semibold text-text-primary">
-                      {(route.currentMinPrice / 100).toLocaleString('pl-PL')} zl
+                      {formatPrice(route.currentMinPrice)}
                     </span>
                   )}
                 </div>
@@ -176,12 +178,13 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
 }
 
 function PriceChange({ current, previous }: { current: number; previous: number }) {
+  const { formatPrice } = useCurrency()
   const diff = current - previous
   const pct = ((diff / previous) * 100).toFixed(1)
   const isDown = diff < 0
   return (
     <span className={`font-mono text-xs font-medium ${isDown ? 'text-green' : 'text-red'}`}>
-      {isDown ? '' : '+'}{(diff / 100).toLocaleString('pl-PL')} zl ({isDown ? '' : '+'}{pct}%)
+      {isDown ? '-' : '+'}{formatPrice(Math.abs(diff))} ({isDown ? '' : '+'}{pct}%)
     </span>
   )
 }

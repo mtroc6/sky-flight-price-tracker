@@ -1,15 +1,21 @@
 import { clsx } from 'clsx'
+import { useCurrency } from '../../lib/CurrencyContext'
+import { convertPriceSync } from '../../lib/currency'
 
 interface PriceDisplayProps {
-  price: number
+  price: number // price in PLN (already divided by 100)
   previousPrice?: number | null
-  currency?: string
   size?: 'sm' | 'md' | 'lg'
 }
 
-export function PriceDisplay({ price, previousPrice, currency = 'PLN', size = 'md' }: PriceDisplayProps) {
-  const diff = previousPrice ? price - previousPrice : 0
-  const pctChange = previousPrice ? ((diff / previousPrice) * 100) : 0
+export function PriceDisplay({ price, previousPrice, size = 'md' }: PriceDisplayProps) {
+  const { currency, symbol } = useCurrency()
+
+  const converted = convertPriceSync(price, currency)
+  const prevConverted = previousPrice ? convertPriceSync(previousPrice, currency) : null
+
+  const diff = prevConverted ? converted - prevConverted : 0
+  const pctChange = prevConverted ? ((diff / prevConverted) * 100) : 0
   const isUp = diff > 0
   const isDown = diff < 0
 
@@ -22,9 +28,9 @@ export function PriceDisplay({ price, previousPrice, currency = 'PLN', size = 'm
   return (
     <div className="flex items-baseline gap-2">
       <span className={clsx('font-mono font-bold text-text-primary', sizeClasses[size])}>
-        {price.toLocaleString('pl-PL')} {currency}
+        {converted.toLocaleString('pl-PL')} {symbol}
       </span>
-      {previousPrice != null && diff !== 0 && (
+      {prevConverted != null && diff !== 0 && (
         <span
           className={clsx(
             'font-mono text-xs font-medium',

@@ -1,4 +1,16 @@
+import { useCurrency } from '../lib/CurrencyContext'
+import type { Currency } from '../lib/currency'
+
+const currencies: { value: Currency; label: string }[] = [
+  { value: 'PLN', label: 'PLN - Zloty polski' },
+  { value: 'EUR', label: 'EUR - Euro' },
+  { value: 'USD', label: 'USD - Dolar' },
+  { value: 'GBP', label: 'GBP - Funt' },
+]
+
 export default function Settings() {
+  const { currency, setCurrency } = useCurrency()
+
   return (
     <div className="space-y-6">
       <div>
@@ -7,6 +19,26 @@ export default function Settings() {
       </div>
 
       <div className="space-y-6">
+        {/* Currency */}
+        <div className="rounded-xl border border-border bg-bg-card p-6">
+          <h2 className="text-sm font-semibold text-text-primary">Waluta wyswietlania</h2>
+          <p className="mt-1 text-xs text-text-muted">Ceny przeliczane po aktualnym kursie (Frankfurter API). Dane w bazie zawsze w PLN.</p>
+          <div className="mt-3 flex gap-2">
+            {currencies.map((c) => (
+              <button
+                key={c.value}
+                onClick={() => setCurrency(c.value)}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  currency === c.value
+                    ? 'bg-accent text-bg-primary'
+                    : 'border border-border text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                {c.value}
+              </button>
+            ))}
+          </div>
+        </div>
         {/* How it works + Schedule */}
         <div className="rounded-xl border border-border bg-bg-card p-6">
           <h2 className="text-sm font-semibold text-text-primary">Jak to dziala</h2>
