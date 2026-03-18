@@ -7,84 +7,55 @@ export default function Settings() {
       </div>
 
       <div className="max-w-2xl space-y-6">
-        {/* How it works */}
+        {/* How it works + Schedule */}
         <div className="rounded-xl border border-border bg-bg-card p-6">
-          <h2 className="text-sm font-semibold text-text-primary">Jak to dziala?</h2>
-          <div className="mt-3 space-y-3 text-xs text-text-secondary">
-            <div className="flex gap-3">
-              <span className="font-mono font-bold text-accent">1.</span>
-              <p>Wklejasz link do konkretnego lotu z Google Flights</p>
+          <h2 className="text-sm font-semibold text-text-primary">Jak to dziala</h2>
+          <p className="mt-2 text-xs text-text-secondary">
+            Wklejasz link z Google Flights → system pobiera dane lotu przez SerpApi → co ~1h Playwright sprawdza aktualna cene → wykresy pokazuja zmiany w czasie.
+          </p>
+
+          <div className="mt-4 grid grid-cols-3 gap-px rounded-lg bg-border overflow-hidden">
+            <div className="bg-bg-tertiary px-3 py-2 text-center">
+              <p className="font-mono text-sm font-bold text-text-primary">co ~1h</p>
+              <p className="text-[10px] text-text-muted">dzien (7-22)</p>
             </div>
-            <div className="flex gap-3">
-              <span className="font-mono font-bold text-accent">2.</span>
-              <p>System pobiera dane lotu (linia, godziny, cena) przez SerpApi</p>
+            <div className="bg-bg-tertiary px-3 py-2 text-center">
+              <p className="font-mono text-sm font-bold text-text-primary">co ~3h</p>
+              <p className="text-[10px] text-text-muted">noc (22-7)</p>
             </div>
-            <div className="flex gap-3">
-              <span className="font-mono font-bold text-accent">3.</span>
-              <p>Co ~1 godzine (7:00-22:00) Playwright otwiera strone lotu i zapisuje aktualna cene</p>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-mono font-bold text-accent">4.</span>
-              <p>Wykresy candlestick i liniowy pokazuja jak cena zmienia sie w czasie</p>
+            <div className="bg-bg-tertiary px-3 py-2 text-center">
+              <p className="font-mono text-sm font-bold text-text-primary">co 5 min</p>
+              <p className="text-[10px] text-text-muted">reczne</p>
             </div>
           </div>
+
+          <p className="mt-3 text-[10px] text-text-muted">
+            GitHub Actions moze opoznic uruchomienie o 5-50 min. Ceny w PLN.
+          </p>
         </div>
 
-        {/* Data sources */}
+        {/* Sources + About */}
         <div className="rounded-xl border border-border bg-bg-card p-6">
           <h2 className="text-sm font-semibold text-text-primary">Zrodla danych</h2>
           <div className="mt-3 space-y-2">
-            <div className="flex items-center justify-between rounded-lg bg-bg-tertiary px-3 py-2">
+            <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green" />
-                <div>
-                  <span className="text-sm text-text-primary">Google Flights (Playwright)</span>
-                  <p className="text-[10px] text-text-muted">Automatyczne pobieranie cen co ~1h</p>
-                </div>
+                <div className="h-1.5 w-1.5 rounded-full bg-green" />
+                <span className="text-text-primary">Google Flights (Playwright)</span>
               </div>
-              <span className="text-xs text-accent">Cron</span>
+              <span className="text-text-muted">automatyczne ceny</span>
             </div>
-            <div className="flex items-center justify-between rounded-lg bg-bg-tertiary px-3 py-2">
+            <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green" />
-                <div>
-                  <span className="text-sm text-text-primary">SerpApi Google Flights</span>
-                  <p className="text-[10px] text-text-muted">Dodawanie lotow + reczne odswiezanie</p>
-                </div>
+                <div className="h-1.5 w-1.5 rounded-full bg-green" />
+                <span className="text-text-primary">SerpApi Google Flights</span>
               </div>
-              <span className="text-xs text-text-muted">API</span>
+              <span className="text-text-muted">dodawanie + reczne</span>
             </div>
           </div>
-        </div>
 
-        {/* Schedule */}
-        <div className="rounded-xl border border-border bg-bg-card p-6">
-          <h2 className="text-sm font-semibold text-text-primary">Harmonogram</h2>
-          <div className="mt-3 space-y-2 text-xs text-text-secondary">
-            <div className="flex justify-between">
-              <span>Dzien (7:00 - 22:00 CET)</span>
-              <span className="font-mono text-text-primary">co ~1h</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Noc (22:00 - 7:00 CET)</span>
-              <span className="font-mono text-text-primary">co ~3h</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Reczne odswiezenie</span>
-              <span className="font-mono text-text-primary">co 5 min</span>
-            </div>
-            <p className="mt-2 text-[10px] text-text-muted">
-              GitHub Actions moze opoznic uruchomienie o 5-50 min. Ceny w PLN.
-            </p>
-          </div>
-        </div>
-
-        {/* About */}
-        <div className="rounded-xl border border-border bg-bg-card p-6">
-          <h2 className="text-sm font-semibold text-text-primary">O aplikacji</h2>
-          <div className="mt-3 space-y-1 text-xs text-text-secondary">
-            <p>Sky - Flight Price Tracker v1.0.0</p>
-            <p className="text-text-muted">Koszt: $0/mies (darmowe API + GitHub Actions)</p>
+          <div className="mt-4 border-t border-border pt-4 text-xs text-text-muted">
+            Sky - Flight Price Tracker v1.0.0 · Koszt: $0/mies
           </div>
         </div>
       </div>
