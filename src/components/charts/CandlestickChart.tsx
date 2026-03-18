@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { createChart, type IChartApi, ColorType } from 'lightweight-charts'
+import { createChart, type IChartApi, ColorType, CandlestickSeries } from 'lightweight-charts'
 import type { OHLCData } from '../../types/chart'
 
 interface CandlestickChartProps {
@@ -39,7 +39,7 @@ export function CandlestickChart({ data, height = 400 }: CandlestickChartProps) 
       height,
     })
 
-    const candlestickSeries = chart.addCandlestickSeries({
+    const series = chart.addSeries(CandlestickSeries, {
       upColor: '#00ff88',
       downColor: '#ff4444',
       borderUpColor: '#00ff88',
@@ -48,7 +48,7 @@ export function CandlestickChart({ data, height = 400 }: CandlestickChartProps) 
       wickDownColor: '#ff4444',
     })
 
-    candlestickSeries.setData(data as Parameters<typeof candlestickSeries.setData>[0])
+    series.setData(data as Parameters<typeof series.setData>[0])
     chart.timeScale().fitContent()
     chartRef.current = chart
 

@@ -65,7 +65,7 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightS
       airlineLogo: (firstLeg.airline_logo as string) || null,
       departureTime: depAirport.time || '',
       arrivalTime: arrAirport.time || '',
-      duration: (flight.total_duration as number) || 0,
+      duration: ((flight.total_duration as number) || 0) * 60,
       stops: Math.max(0, legs.length - 1),
       stopCities: legs.slice(1).map((l) => {
         const dep = l.departure_airport as Record<string, string>
@@ -94,7 +94,7 @@ export async function getMinPrice(
   returnDate?: string,
   _flexDays: number = 0,
   cabinClass: string = 'economy',
-): Promise<{ priceCents: number; airline: string; stops: number; bookingLink: string } | null> {
+): Promise<{ priceCents: number; airline: string; stops: number; bookingLink: string; departureTime: string; arrivalTime: string; duration: number } | null> {
   const url = new URL(SERPAPI_BASE)
   url.searchParams.set('engine', 'google_flights')
   url.searchParams.set('api_key', process.env.SERPAPI_KEY || '')
@@ -133,11 +133,17 @@ export async function getMinPrice(
 
   const legs = cheapest.flights as Array<Record<string, unknown>>
   const firstLeg = legs[0]
+  const lastLeg = legs[legs.length - 1]
+  const depAirport = firstLeg.departure_airport as Record<string, string>
+  const arrAirport = lastLeg.arrival_airport as Record<string, string>
 
   return {
     priceCents: Math.round((cheapest.price as number) * 100),
     airline: (firstLeg.airline as string) || '',
     stops: Math.max(0, legs.length - 1),
     bookingLink: '',
+    departureTime: depAirport?.time || '',
+    arrivalTime: arrAirport?.time || '',
+    duration: ((cheapest.total_duration as number) || 0) * 60,
   }
 }

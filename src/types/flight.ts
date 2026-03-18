@@ -24,6 +24,11 @@ export interface WatchedRoute {
   lastChecked: string | null
   currentMinPrice: number | null
   previousMinPrice: number | null
+  bestAirline: string | null
+  bestStops: number | null
+  bestDepartureTime: string | null
+  bestArrivalTime: string | null
+  bestDuration: number | null
 }
 
 export interface PriceSnapshot {
@@ -33,7 +38,7 @@ export interface PriceSnapshot {
   airline: string | null
   stops: number
   bookingLink: string | null
-  source: 'kiwi' | 'serpapi'
+  source: 'kiwi' | 'serpapi' | 'google'
   fetchedAt: string
 }
 
@@ -50,7 +55,7 @@ export interface FlightSearchResult {
   stopCities: string[]
   origin: string
   destination: string
-  bookingLink: string
+  bookingLink: string | null
   returnDepartureTime?: string
   returnArrivalTime?: string
   returnDuration?: number

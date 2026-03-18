@@ -2,17 +2,29 @@ name: Fetch Flight Prices
 
 on:
   schedule:
-    - cron: '0 6 * * *'   # 6:00 UTC
-    - cron: '0 18 * * *'  # 18:00 UTC
+    - cron: '0 5-20/1 * * *'   # Co 1h, 7:00-22:00 CET (UTC+2)
+    - cron: '0 23,2 * * *'     # 2x w nocy (1:00 i 4:00 CET)
   workflow_dispatch:
 
 jobs:
-  fetch:
+  scrape:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Trigger price fetch
-        run: |
-          curl -X POST "${{ secrets.APP_URL }}/api/cron/fetch-prices" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            -H "Content-Type: application/json" \
-            --fail --silent --show-error
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Scrape flight prices
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx tsx scripts/scrape-prices.ts

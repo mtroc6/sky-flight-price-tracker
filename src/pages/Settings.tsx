@@ -45,24 +45,27 @@ export default function Settings() {
 
         {/* API Status */}
         <div className="rounded-xl border border-border bg-bg-card p-6">
-          <h2 className="text-sm font-semibold text-text-primary">Status API</h2>
-          <p className="mt-1 text-xs text-text-secondary">Zrodla danych cenowych</p>
+          <h2 className="text-sm font-semibold text-text-primary">Zrodla danych</h2>
+          <p className="mt-1 text-xs text-text-secondary">Skad pobieramy ceny lotow</p>
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between rounded-lg bg-bg-tertiary px-3 py-2">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-green" />
-                <span className="text-sm text-text-primary">Kiwi Tequila API</span>
+                <span className="text-sm text-text-primary">Google Flights (Playwright)</span>
               </div>
-              <span className="text-xs text-text-muted">Primary</span>
+              <span className="text-xs text-accent">Automatyczne</span>
             </div>
             <div className="flex items-center justify-between rounded-lg bg-bg-tertiary px-3 py-2">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-text-muted" />
-                <span className="text-sm text-text-primary">SerpAPI Google Flights</span>
+                <div className="h-2 w-2 rounded-full bg-green" />
+                <span className="text-sm text-text-primary">SerpApi Google Flights</span>
               </div>
-              <span className="text-xs text-text-muted">Opcjonalny</span>
+              <span className="text-xs text-text-muted">Reczne / szukanie</span>
             </div>
           </div>
+          <p className="mt-3 text-xs text-text-muted">
+            Ceny automatycznie co 1h w dzien (7-22), co 3h w nocy. Reczne odswiezenie dostepne raz na godzine.
+          </p>
         </div>
 
         {/* Info */}
@@ -71,7 +74,7 @@ export default function Settings() {
           <div className="mt-3 space-y-2 text-xs text-text-secondary">
             <p>Sky - Flight Price Tracker v1.0.0</p>
             <p>Osobista aplikacja do sledzenia cen lotow z wykresami candlestick.</p>
-            <p className="text-text-muted">Dane cenowe sa pobierane automatycznie 2x dziennie.</p>
+            <p className="text-text-muted">Pierwsza cena pobierana od razu przy dodaniu trasy. Koszt: $0/mies.</p>
           </div>
         </div>
       </div>

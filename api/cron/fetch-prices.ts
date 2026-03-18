@@ -58,6 +58,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               previousMinPrice: route.currentMinPrice,
               currentMinPrice: priceData.priceCents,
               lastChecked: new Date(),
+              bestAirline: priceData.airline,
+              bestStops: priceData.stops,
+              bestDepartureTime: priceData.departureTime,
+              bestArrivalTime: priceData.arrivalTime,
+              bestDuration: priceData.duration,
             })
             .where(eq(watchedRoutes.id, route.id))
 

@@ -6,8 +6,16 @@ interface FlightResultCardProps {
   onAddToWatchlist?: () => void
 }
 
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+function formatTime(timeStr: string): string {
+  // SerpApi returns "2026-04-13 14:25" format
+  const timePart = timeStr.split(' ')[1]
+  if (timePart) return timePart.slice(0, 5)
+  // Fallback for ISO format
+  try {
+    return new Date(timeStr).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return timeStr
+  }
 }
 
 function formatDuration(seconds: number): string {
@@ -83,24 +91,14 @@ export function FlightResultCard({ flight, onAddToWatchlist }: FlightResultCardP
         <div className="flex flex-col items-end gap-2">
           <PriceDisplay price={flight.price} currency={flight.priceCurrency} />
 
-          <div className="flex gap-2">
-            {onAddToWatchlist && (
-              <button
-                onClick={onAddToWatchlist}
-                className="rounded-lg border border-accent/30 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent/10"
-              >
-                Obserwuj
-              </button>
-            )}
-            <a
-              href={flight.bookingLink}
-              target="_blank"
-              rel="noopener noreferrer"
+          {onAddToWatchlist && (
+            <button
+              onClick={onAddToWatchlist}
               className="rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-bg-primary transition-colors hover:bg-accent-dim"
             >
-              Rezerwuj
-            </a>
-          </div>
+              Obserwuj
+            </button>
+          )}
         </div>
       </div>
     </div>

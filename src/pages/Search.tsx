@@ -12,8 +12,9 @@ export default function Search() {
   const [departureDate, setDepartureDate] = useState('')
   const [returnDate, setReturnDate] = useState('')
   const [isRoundTrip, setIsRoundTrip] = useState(true)
+  const [directOnly, setDirectOnly] = useState(false)
   const [searchParams, setSearchParams] = useState<{
-    origin: string; destination: string; departureDate: string; returnDate?: string
+    origin: string; destination: string; departureDate: string; returnDate?: string; maxStops?: string
   } | null>(null)
 
   const { data: flights, isLoading, error } = useFlightSearch(searchParams)
@@ -27,6 +28,7 @@ export default function Search() {
       destination: destination.code,
       departureDate,
       returnDate: returnDate || undefined,
+      maxStops: directOnly ? '0' : undefined,
     })
   }
 
@@ -52,7 +54,7 @@ export default function Search() {
       {/* Search form */}
       <form onSubmit={handleSearch} className="rounded-xl border border-border bg-bg-card p-4">
         {/* Trip type toggle */}
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 flex items-center gap-2">
           <button
             type="button"
             onClick={() => { setIsRoundTrip(false); setReturnDate('') }}
@@ -75,6 +77,17 @@ export default function Search() {
           >
             Powrotny
           </button>
+          <div className="ml-4 border-l border-border pl-4">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
+              <input
+                type="checkbox"
+                checked={directOnly}
+                onChange={(e) => setDirectOnly(e.target.checked)}
+                className="h-4 w-4 rounded border-border bg-bg-tertiary accent-accent"
+              />
+              Tylko bezposrednie
+            </label>
+          </div>
         </div>
 
         <div className={`grid gap-4 sm:grid-cols-2 ${isRoundTrip ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>

@@ -63,5 +63,10 @@ export const api = {
         `/prices/${routeId}${qs}`
       )
     },
+    refresh: (routeId: number) =>
+      request<{ data: import('../types/flight').WatchedRoute | null; message?: string }>(
+        `/prices/refresh?routeId=${routeId}`,
+        { method: 'POST' },
+      ),
   },
 }

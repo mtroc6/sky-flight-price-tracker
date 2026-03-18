@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { usePriceHistory } from '../hooks/usePriceHistory'
 import { useWatchlist } from '../hooks/useWatchlist'
@@ -7,7 +7,66 @@ import { PriceLineChart } from '../components/charts/PriceLineChart'
 import { PriceDisplay } from '../components/common/PriceDisplay'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { snapshotsToOHLC, snapshotsToPricePoints, shouldUseDailyCandles, filterByTimeRange } from '../lib/chart-transforms'
+import { api } from '../lib/api-client'
+import { useQueryClient } from '@tanstack/react-query'
 import type { TimeRange } from '../types/chart'
+
+const REFRESH_COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
+
+function useTimeAgo(date: string | null) {
+  const [text, setText] = useState('')
+
+  useEffect(() => {
+    if (!date) { setText(''); return }
+
+    function update() {
+      const diff = Date.now() - new Date(date!).getTime()
+      const mins = Math.floor(diff / 60000)
+      const hours = Math.floor(mins / 60)
+      const days = Math.floor(hours / 24)
+
+      if (mins < 1) setText('przed chwila')
+      else if (mins < 60) setText(`${mins} min temu`)
+      else if (hours < 24) setText(`${hours}h ${mins % 60}min temu`)
+      else setText(`${days}d ${hours % 24}h temu`)
+    }
+
+    update()
+    const interval = setInterval(update, 30000)
+    return () => clearInterval(interval)
+  }, [date])
+
+  return text
+}
+
+function useRefreshCooldown(lastChecked: string | null) {
+  const [canRefresh, setCanRefresh] = useState(false)
+  const [remainingText, setRemainingText] = useState('')
+
+  useEffect(() => {
+    function update() {
+      if (!lastChecked) { setCanRefresh(true); setRemainingText(''); return }
+
+      const elapsed = Date.now() - new Date(lastChecked).getTime()
+      const remaining = REFRESH_COOLDOWN_MS - elapsed
+
+      if (remaining <= 0) {
+        setCanRefresh(true)
+        setRemainingText('')
+      } else {
+        setCanRefresh(false)
+        const mins = Math.ceil(remaining / 60000)
+        setRemainingText(`za ${mins} min`)
+      }
+    }
+
+    update()
+    const interval = setInterval(update, 15000)
+    return () => clearInterval(interval)
+  }, [lastChecked])
+
+  return { canRefresh, remainingText }
+}
 
 const timeRanges: TimeRange[] = ['1W', '1M', '3M', '6M', '1Y', 'ALL']
 
@@ -16,11 +75,31 @@ export default function RouteDetail() {
   const routeId = Number(id)
   const [timeRange, setTimeRange] = useState<TimeRange>('1M')
   const [chartType, setChartType] = useState<'candle' | 'line'>('candle')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [refreshError, setRefreshError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
   const { data: routes } = useWatchlist()
   const { data: snapshots, isLoading } = usePriceHistory(routeId, timeRange)
 
   const route = routes?.find((r) => r.id === routeId)
+  const lastCheckedAgo = useTimeAgo(route?.lastChecked ?? null)
+  const { canRefresh, remainingText } = useRefreshCooldown(route?.lastChecked ?? null)
+
+  const handleRefresh = useCallback(async () => {
+    if (!canRefresh || isRefreshing) return
+    setIsRefreshing(true)
+    setRefreshError(null)
+    try {
+      await api.prices.refresh(routeId)
+      queryClient.invalidateQueries({ queryKey: ['prices'] })
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] })
+    } catch (err) {
+      setRefreshError((err as Error).message)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [canRefresh, isRefreshing, routeId, queryClient])
 
   const filteredSnapshots = snapshots ? filterByTimeRange(snapshots, timeRange) : []
   const useDaily = shouldUseDailyCandles(filteredSnapshots)
@@ -66,19 +145,78 @@ export default function RouteDetail() {
                 <span>Klasa: {route.cabinClass}</span>
                 {route.flexDays > 0 && <span>&plusmn;{route.flexDays} dni</span>}
               </div>
+              {route.bestAirline && (
+                <div className="mt-3 flex items-center gap-4 rounded-lg bg-bg-tertiary px-3 py-2 text-sm">
+                  <span className="font-medium text-text-primary">{route.bestAirline}</span>
+                  {route.bestDepartureTime && route.bestArrivalTime && (
+                    <span className="font-mono text-text-secondary">
+                      {route.bestDepartureTime.split(' ')[1]?.slice(0, 5) || route.bestDepartureTime}
+                      {' → '}
+                      {route.bestArrivalTime.split(' ')[1]?.slice(0, 5) || route.bestArrivalTime}
+                    </span>
+                  )}
+                  {route.bestDuration != null && route.bestDuration > 0 && (
+                    <span className="text-text-muted">
+                      {Math.floor(route.bestDuration / 3600)}h {Math.floor((route.bestDuration % 3600) / 60)}m
+                    </span>
+                  )}
+                  <span className={route.bestStops === 0 ? 'text-green' : 'text-text-muted'}>
+                    {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {route.currentMinPrice != null && (
-              <div className="text-right">
-                <PriceDisplay
-                  price={route.currentMinPrice / 100}
-                  previousPrice={route.previousMinPrice ? route.previousMinPrice / 100 : null}
-                  size="lg"
-                />
-                <p className="mt-1 text-xs text-text-muted">Aktualna najnizsza cena</p>
-              </div>
-            )}
+            <div className="text-right">
+              {route.currentMinPrice != null && (
+                <>
+                  <PriceDisplay
+                    price={route.currentMinPrice / 100}
+                    previousPrice={route.previousMinPrice ? route.previousMinPrice / 100 : null}
+                    size="lg"
+                  />
+                  <p className="mt-1 text-xs text-text-muted">Aktualna najnizsza cena</p>
+                </>
+              )}
+            </div>
           </div>
+
+          {/* Last update + refresh */}
+          <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+            <div className="flex items-center gap-2 text-xs text-text-muted">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {route.lastChecked ? (
+                <span>Ostatnia aktualizacja: <span className="text-text-secondary">{lastCheckedAgo}</span></span>
+              ) : (
+                <span>Brak danych cenowych</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {!canRefresh && remainingText && (
+                <span className="text-xs text-text-muted">Nastepne odswiezenie {remainingText}</span>
+              )}
+              <button
+                onClick={handleRefresh}
+                disabled={!canRefresh || isRefreshing}
+                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-border disabled:hover:text-text-secondary"
+              >
+                <svg
+                  className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {isRefreshing ? 'Odswiezam...' : 'Odswiez cene'}
+              </button>
+            </div>
+          </div>
+          {refreshError && (
+            <div className="mt-2 rounded-lg bg-red-dim/10 px-3 py-2 text-xs text-red">
+              {refreshError}
+            </div>
+          )}
         </div>
       )}
 

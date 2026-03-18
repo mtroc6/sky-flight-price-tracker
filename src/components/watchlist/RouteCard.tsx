@@ -43,6 +43,26 @@ export function RouteCard({ route, onDelete, onToggle }: RouteCardProps) {
             {route.returnDate && <span>Powrot: {route.returnDate}</span>}
             {route.flexDays > 0 && <span>&plusmn;{route.flexDays} dni</span>}
           </div>
+          {route.bestAirline && (
+            <div className="mt-2 flex items-center gap-3 text-xs text-text-secondary">
+              <span className="font-medium">{route.bestAirline}</span>
+              {route.bestDepartureTime && route.bestArrivalTime && (
+                <span>
+                  {route.bestDepartureTime.split(' ')[1]?.slice(0, 5) || route.bestDepartureTime}
+                  {' → '}
+                  {route.bestArrivalTime.split(' ')[1]?.slice(0, 5) || route.bestArrivalTime}
+                </span>
+              )}
+              {route.bestDuration != null && route.bestDuration > 0 && (
+                <span className="text-text-muted">
+                  {Math.floor(route.bestDuration / 3600)}h {Math.floor((route.bestDuration % 3600) / 60)}m
+                </span>
+              )}
+              <span className="text-text-muted">
+                {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col items-end gap-2">
@@ -73,7 +93,7 @@ export function RouteCard({ route, onDelete, onToggle }: RouteCardProps) {
           </span>
           {route.lastChecked && (
             <span className="text-[10px] text-text-muted">
-              Sprawdzono: {new Date(route.lastChecked).toLocaleDateString('pl-PL')}
+              Sprawdzono: {new Date(route.lastChecked).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
         </div>

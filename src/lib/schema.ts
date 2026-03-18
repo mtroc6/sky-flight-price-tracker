@@ -26,6 +26,11 @@ export const watchedRoutes = pgTable('watched_routes', {
   lastChecked: timestamp('last_checked'),
   currentMinPrice: integer('current_min_price'),
   previousMinPrice: integer('previous_min_price'),
+  bestAirline: text('best_airline'),
+  bestStops: integer('best_stops'),
+  bestDepartureTime: text('best_departure_time'),
+  bestArrivalTime: text('best_arrival_time'),
+  bestDuration: integer('best_duration'),
 }, (table) => [
   index('idx_routes_active').on(table.isActive),
 ])
@@ -37,7 +42,7 @@ export const priceSnapshots = pgTable('price_snapshots', {
   airline: text('airline'),
   stops: integer('stops').notNull().default(0),
   bookingLink: text('booking_link'),
-  source: text('source', { enum: ['serpapi', 'kiwi'] }).notNull().default('serpapi'),
+  source: text('source', { enum: ['serpapi', 'google', 'kiwi'] }).notNull().default('serpapi'),
   fetchedAt: timestamp('fetched_at').notNull().defaultNow(),
 }, (table) => [
   index('idx_snapshots_route').on(table.routeId),

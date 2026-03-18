@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, type Plugin, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
@@ -10,6 +10,10 @@ function vercelApiPlugin(): Plugin {
   return {
     name: 'vercel-api',
     configureServer(server) {
+      // Load .env into process.env for API handlers
+      const env = loadEnv('development', __dirname, '')
+      Object.assign(process.env, env)
+
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith('/api/')) return next()
 
