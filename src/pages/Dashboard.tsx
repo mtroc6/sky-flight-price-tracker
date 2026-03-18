@@ -41,47 +41,9 @@ export default function Dashboard() {
 
       {/* Routes overview */}
       {!isLoading && activeRoutes.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-6 rounded-xl border border-border bg-bg-card py-12 px-8">
-          <div className="text-5xl">✈</div>
-          <h2 className="text-lg font-semibold text-text-primary">Zacznij sledzic ceny lotow</h2>
-
-          <div className="w-full max-w-md space-y-4">
-            <div className="flex gap-3">
-              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-xs font-bold text-accent">1</div>
-              <div>
-                <p className="text-sm font-medium text-text-primary">Wyszukaj lot na Google Flights</p>
-                <p className="text-xs text-text-muted">Wejdz na google.com/travel/flights i znajdz interesujacy Cie lot</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-xs font-bold text-accent">2</div>
-              <div>
-                <p className="text-sm font-medium text-text-primary">Kliknij w konkretny lot</p>
-                <p className="text-xs text-text-muted">Otworzy sie strona rezerwacji z detalami lotu</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-xs font-bold text-accent">3</div>
-              <div>
-                <p className="text-sm font-medium text-text-primary">Skopiuj URL i wklej tutaj</p>
-                <p className="text-xs text-text-muted">Skopiuj adres z paska przegladarki i wklej go w &quot;Dodaj lot&quot;</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-xs font-bold text-accent">4</div>
-              <div>
-                <p className="text-sm font-medium text-text-primary">Sledzenie automatyczne</p>
-                <p className="text-xs text-text-muted">Cena bedzie sprawdzana co godzine. Zobaczysz wykres zmian w czasie.</p>
-              </div>
-            </div>
-          </div>
-
-          <Link
-            to="/add"
-            className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-bg-primary hover:bg-accent-dim"
-          >
-            Dodaj pierwszy lot
-          </Link>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-bg-card py-12">
+          <div className="text-4xl">✈</div>
+          <p className="text-sm text-text-muted">Brak obserwowanych lotow. Dodaj pierwszy lot ponizej.</p>
         </div>
       )}
 
@@ -122,6 +84,37 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Tutorial - always visible */}
+      <div className="rounded-xl border border-border bg-bg-card p-6">
+        <h3 className="text-sm font-semibold text-text-primary">Jak dodac lot do sledzenia?</h3>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <TutorialStep num={1} title="Wyszukaj lot" desc="Wejdz na google.com/travel/flights" />
+          <TutorialStep num={2} title="Kliknij w lot" desc="Otworzy sie strona rezerwacji" />
+          <TutorialStep num={3} title="Skopiuj URL" desc="Skopiuj adres z paska przegladarki" />
+          <TutorialStep num={4} title="Wklej tutaj" desc="Cena sprawdzana co godzine automatycznie" />
+        </div>
+        <div className="mt-4 flex justify-center">
+          <Link
+            to="/add"
+            className="rounded-lg bg-accent px-5 py-2 text-sm font-medium text-bg-primary hover:bg-accent-dim"
+          >
+            Dodaj lot
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TutorialStep({ num, title, desc }: { num: number; title: string; desc: string }) {
+  return (
+    <div className="flex gap-3">
+      <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-xs font-bold text-accent">{num}</div>
+      <div>
+        <p className="text-sm font-medium text-text-primary">{title}</p>
+        <p className="text-xs text-text-muted">{desc}</p>
+      </div>
     </div>
   )
 }

@@ -261,7 +261,7 @@ export default function RouteDetail() {
       {isLoading && <LoadingSpinner />}
 
       {/* Charts */}
-      {!isLoading && chartType === 'candle' && <CandlestickChart data={ohlcData} />}
+      {!isLoading && chartType === 'candle' && <CandlestickChart data={ohlcData} showTime={candleInterval === 'hourly'} />}
       {!isLoading && chartType === 'line' && <PriceLineChart data={lineData} />}
 
       {/* Stats */}

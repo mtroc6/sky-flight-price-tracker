@@ -5,19 +5,23 @@ function getGroupKey(dateStr: string, interval: CandleInterval): string {
   const d = new Date(dateStr)
   switch (interval) {
     case 'hourly':
-      return `${d.toISOString().slice(0, 13)}:00` // 2026-03-18T15:00
+      return `${d.toISOString().slice(0, 13)}:00:00Z`
     case 'daily':
-      return d.toISOString().split('T')[0] // 2026-03-18
+      return `${d.toISOString().split('T')[0]}T00:00:00Z`
     case 'weekly': {
       const day = d.getDay()
       const diff = d.getDate() - day + (day === 0 ? -6 : 1)
       const monday = new Date(d)
       monday.setDate(diff)
-      return monday.toISOString().split('T')[0]
+      return `${monday.toISOString().split('T')[0]}T00:00:00Z`
     }
     case 'monthly':
-      return d.toISOString().slice(0, 7) // 2026-03
+      return `${d.toISOString().slice(0, 7)}-01T00:00:00Z`
   }
+}
+
+function toUnix(isoStr: string): number {
+  return Math.floor(new Date(isoStr).getTime() / 1000)
 }
 
 export function snapshotsToOHLC(snapshots: PriceSnapshot[], interval: CandleInterval): OHLCData[] {
@@ -36,7 +40,7 @@ export function snapshotsToOHLC(snapshots: PriceSnapshot[], interval: CandleInte
   return Array.from(grouped.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([time, prices]) => ({
-      time,
+      time: toUnix(time),
       open: priceInUnits(prices[0]),
       high: priceInUnits(Math.max(...prices)),
       low: priceInUnits(Math.min(...prices)),
@@ -48,7 +52,7 @@ export function snapshotsToPricePoints(snapshots: PriceSnapshot[]): PricePoint[]
   return snapshots
     .sort((a, b) => a.fetchedAt.localeCompare(b.fetchedAt))
     .map((s) => ({
-      time: s.fetchedAt.split('T')[0],
+      time: toUnix(s.fetchedAt),
       price: s.priceCents / 100,
       airline: s.airline || undefined,
     }))

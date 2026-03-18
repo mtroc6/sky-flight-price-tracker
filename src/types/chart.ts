@@ -1,5 +1,5 @@
 export interface OHLCData {
-  time: string
+  time: string | number
   open: number
   high: number
   low: number
@@ -7,7 +7,7 @@ export interface OHLCData {
 }
 
 export interface PricePoint {
-  time: string
+  time: string | number
   price: number
   airline?: string
 }

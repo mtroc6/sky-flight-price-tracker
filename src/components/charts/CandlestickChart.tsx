@@ -5,9 +5,10 @@ import type { OHLCData } from '../../types/chart'
 interface CandlestickChartProps {
   data: OHLCData[]
   height?: number
+  showTime?: boolean
 }
 
-export function CandlestickChart({ data, height = 400 }: CandlestickChartProps) {
+export function CandlestickChart({ data, height = 400, showTime = false }: CandlestickChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
 
@@ -34,7 +35,7 @@ export function CandlestickChart({ data, height = 400 }: CandlestickChartProps) 
       },
       timeScale: {
         borderColor: '#30363d',
-        timeVisible: false,
+        timeVisible: showTime,
       },
       height,
     })

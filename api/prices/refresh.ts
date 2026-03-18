@@ -60,7 +60,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       priceCents: priceData.priceCents,
       airline: priceData.airline,
       stops: priceData.stops,
-      bookingLink: priceData.bookingLink,
       source: 'serpapi',
     })
 
