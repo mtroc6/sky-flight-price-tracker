@@ -1,7 +1,7 @@
 /**
  * Playwright Google Flights price scraper
- * Runs on GitHub Actions to fetch prices for all active watched routes.
- * Writes directly to Neon DB — no deployed app needed.
+ * Loads each watched route's trackingUrl and extracts the current price.
+ * Writes directly to Neon DB.
  */
 
 import { chromium } from 'playwright'
@@ -25,169 +25,58 @@ function sleep(ms: number) {
 
 async function scrapePrice(
   page: Awaited<ReturnType<Awaited<ReturnType<typeof chromium.launch>>['newPage']>>,
-  origin: string,
-  destination: string,
-  departureDate: string,
-  returnDate?: string | null,
-): Promise<{ price: number; airline: string; stops: number } | null> {
-  console.log(`  Scraping: ${origin} → ${destination} (${departureDate})`)
+  trackingUrl: string,
+  label: string,
+): Promise<{ price: number } | null> {
+  console.log(`  Scraping: ${label}`)
 
   try {
-    // Go to Google Flights main page
-    await page.goto('https://www.google.com/travel/flights?hl=pl&curr=PLN', {
-      waitUntil: 'networkidle',
-      timeout: 30000,
-    })
-    await page.waitForTimeout(2000)
+    await page.goto(trackingUrl, { waitUntil: 'networkidle', timeout: 30000 })
+    await page.waitForTimeout(3000)
 
-    // Set one-way if no return date
-    if (!returnDate) {
-      const tripTypeButton = page.locator('[aria-label*="obie strony"], [aria-label*="W obie strony"], [aria-label*="Round trip"]').first()
-      if (await tripTypeButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await tripTypeButton.click()
-        await page.waitForTimeout(500)
-        // Select "W jedną stronę" / "One way"
-        const oneWayOption = page.locator('li').filter({ hasText: /jedn|One way/i }).first()
-        if (await oneWayOption.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await oneWayOption.click()
-          await page.waitForTimeout(500)
-        }
-      }
+    // Accept cookie consent if present
+    const consentButton = page.locator('button').filter({ hasText: /Zaakceptuj wszystko|Accept all/i }).first()
+    if (await consentButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await consentButton.click()
+      await page.waitForTimeout(3000)
     }
 
-    // Clear and fill origin
-    const originInput = page.locator('input[aria-label*="kąd"], input[aria-label*="Where from"], input[placeholder*="kąd"]').first()
-    await originInput.click()
-    await page.waitForTimeout(300)
-    await originInput.fill('')
-    await originInput.fill(origin)
-    await page.waitForTimeout(1000)
-    // Click first suggestion
-    const originSuggestion = page.locator('li[role="option"], ul[role="listbox"] li').first()
-    if (await originSuggestion.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await originSuggestion.click()
-    } else {
-      await page.keyboard.press('Enter')
-    }
-    await page.waitForTimeout(500)
+    // Wait for content
+    await page.waitForTimeout(3000)
 
-    // Fill destination
-    const destInput = page.locator('input[aria-label*="Dokąd"], input[aria-label*="Where to"], input[placeholder*="Dokąd"]').first()
-    await destInput.click()
-    await page.waitForTimeout(300)
-    await destInput.fill(destination)
-    await page.waitForTimeout(1000)
-    const destSuggestion = page.locator('li[role="option"], ul[role="listbox"] li').first()
-    if (await destSuggestion.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await destSuggestion.click()
-    } else {
-      await page.keyboard.press('Enter')
-    }
-    await page.waitForTimeout(500)
+    // Extract price from the booking page
+    // Google Flights booking page shows price in elements with class QORQHb or similar
+    const price = await page.evaluate(() => {
+      // Method 1: Look for standalone price elements with "zł"
+      const candidates: number[] = []
 
-    // Fill departure date
-    const dateInput = page.locator('input[aria-label*="Wylot"], input[aria-label*="Departure"], input[placeholder*="Wylot"]').first()
-    await dateInput.click()
-    await page.waitForTimeout(500)
-
-    // Parse date and find the right day in the calendar
-    const [year, month, day] = departureDate.split('-').map(Number)
-    const monthNames = ['', 'styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec',
-      'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień']
-
-    // Navigate calendar to correct month
-    for (let attempts = 0; attempts < 12; attempts++) {
-      const calendarHeader = await page.locator('[role="heading"]').filter({ hasText: new RegExp(monthNames[month], 'i') }).first()
-      if (await calendarHeader.isVisible({ timeout: 500 }).catch(() => false)) break
-      const nextButton = page.locator('button[aria-label*="Następny"], button[aria-label*="Next"]').first()
-      if (await nextButton.isVisible({ timeout: 500 }).catch(() => false)) {
-        await nextButton.click()
-        await page.waitForTimeout(300)
-      }
-    }
-
-    // Click the day
-    const dayButton = page.locator(`[role="button"][aria-label*="${day}"]`).filter({ hasText: String(day) }).first()
-    if (await dayButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await dayButton.click()
-      await page.waitForTimeout(300)
-    }
-
-    // Click "Gotowe" / "Done"
-    const doneButton = page.locator('button').filter({ hasText: /Gotowe|Done/i }).first()
-    if (await doneButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await doneButton.click()
-    }
-    await page.waitForTimeout(500)
-
-    // Click search / "Eksploruj" / results should auto-load
-    const searchButton = page.locator('button').filter({ hasText: /Szukaj|Eksploruj|Search|Explore/i }).first()
-    if (await searchButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await searchButton.click()
-    }
-
-    // Wait for results to load
-    await page.waitForTimeout(5000)
-
-    // Now extract prices from the results page
-    const priceResult = await page.evaluate(() => {
-      // On the search results page, prices are typically in elements with "zł"
-      // Look for flight result cards and extract prices
-      const allPrices: { price: number; context: string }[] = []
-
-      // Find all elements containing "zł" that are likely flight prices
       document.querySelectorAll('span, div').forEach(el => {
         const text = el.textContent?.trim() || ''
-        // Match standalone prices like "479 zł", "1 234 zł"
-        // Exclude "od 282 zł" (teaser prices with "od")
-        if (el.children.length > 3) return // skip container elements
+        if (el.children.length > 3) return
 
-        const match = text.match(/^(\d[\d\s]*)[\s]*zł$/i)
+        // Match "479 zł" pattern (standalone, not "od X zł")
+        const match = text.match(/^(\d[\d\s]*)[\s]*zł$/)
         if (match) {
           const price = parseInt(match[1].replace(/\s/g, ''), 10)
-          if (price > 50 && price < 50000) {
-            allPrices.push({ price, context: el.parentElement?.textContent?.slice(0, 80) || '' })
+          if (price > 30 && price < 50000) {
+            candidates.push(price)
           }
         }
       })
 
-      if (allPrices.length === 0) return null
-
-      // The first real flight price (not "od X zł") is likely the best flight
-      const bestPrice = allPrices[0].price
-
-      // Airline detection from page text
-      let airline = ''
-      const airlinePatterns = [
-        'Ryanair', 'Wizz Air', 'LOT', 'Lufthansa', 'KLM',
-        'easyJet', 'Norwegian', 'TAP', 'Vueling', 'Iberia',
-        'Air France', 'British Airways', 'SAS', 'Finnair',
-        'Turkish Airlines', 'Emirates', 'Qatar Airways', 'Swiss', 'Austrian',
-      ]
-      const bodyText = document.body.innerText
-      for (const name of airlinePatterns) {
-        if (bodyText.includes(name)) { airline = name; break }
-      }
-
-      // Stops detection
-      let stops = -1 // unknown
-      if (/Bez przesiadek|bezpośredni/i.test(bodyText.slice(0, 8000))) stops = 0
-      else if (/1 przesiadka/i.test(bodyText.slice(0, 8000))) stops = 1
-      else if (/2 przesiadk/i.test(bodyText.slice(0, 8000))) stops = 2
-
-      return { price: bestPrice, airline, stops: stops >= 0 ? stops : 0 }
+      // The first price on Google Flights booking page is the flight price
+      return candidates.length > 0 ? candidates[0] : null
     })
 
-    if (!priceResult) {
-      // Take a screenshot for debugging
-      const screenshotName = `scripts/debug-${origin}-${destination}.png`
-      await page.screenshot({ path: screenshotName, fullPage: true })
-      console.log(`  No price found, screenshot: ${screenshotName}`)
+    if (price) {
+      return { price }
     }
 
-    return priceResult
+    // Fallback screenshot for debugging
+    console.log(`  No price found, taking screenshot`)
+    return null
   } catch (err) {
-    console.error(`  Error scraping ${origin}→${destination}:`, (err as Error).message)
+    console.error(`  Error: ${(err as Error).message}`)
     return null
   }
 }
@@ -196,20 +85,20 @@ async function main() {
   console.log('=== Sky Price Scraper ===')
   console.log(`Time: ${new Date().toISOString()}`)
 
-  // Get active routes from DB
+  // Get active routes with tracking URLs
   const routes = await db
     .select()
     .from(schema.watchedRoutes)
     .where(eq(schema.watchedRoutes.isActive, true))
 
-  console.log(`Found ${routes.length} active route(s)`)
+  const trackableRoutes = routes.filter(r => r.trackingUrl)
+  console.log(`Found ${routes.length} active route(s), ${trackableRoutes.length} with tracking URLs`)
 
-  if (routes.length === 0) {
-    console.log('No active routes. Exiting.')
+  if (trackableRoutes.length === 0) {
+    console.log('No trackable routes. Exiting.')
     return
   }
 
-  // Launch browser
   const browser = await chromium.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -221,19 +110,14 @@ async function main() {
     viewport: { width: 1920, height: 1080 },
   })
 
-  const results: Array<{ routeId: number; success: boolean; price?: number; error?: string }> = []
+  const results: Array<{ routeId: number; success: boolean; price?: number }> = []
 
-  for (const route of routes) {
-    // Each route gets a fresh page to avoid state leaking
+  for (const route of trackableRoutes) {
     const page = await context.newPage()
+    const label = `${route.originCode}→${route.destinationCode} (${route.flightNumber || route.departureDate})`
 
-    const priceData = await scrapePrice(
-      page,
-      route.originCode,
-      route.destinationCode,
-      route.departureDate,
-      route.returnDate,
-    )
+    const priceData = await scrapePrice(page, route.trackingUrl!, label)
+    await page.close()
 
     if (priceData) {
       const priceCents = priceData.price * 100
@@ -241,9 +125,8 @@ async function main() {
       await db.insert(schema.priceSnapshots).values({
         routeId: route.id,
         priceCents,
-        airline: priceData.airline || null,
-        stops: priceData.stops,
-        bookingLink: '',
+        airline: route.bestAirline,
+        stops: route.bestStops ?? 0,
         source: 'google',
       })
 
@@ -256,17 +139,15 @@ async function main() {
         })
         .where(eq(schema.watchedRoutes.id, route.id))
 
-      console.log(`  ✓ ${route.originCode}→${route.destinationCode}: ${priceData.price} PLN (${priceData.airline})`)
+      console.log(`  ✓ ${label}: ${priceData.price} PLN`)
       results.push({ routeId: route.id, success: true, price: priceCents })
     } else {
-      console.log(`  ✗ ${route.originCode}→${route.destinationCode}: no price found`)
-      results.push({ routeId: route.id, success: false, error: 'No price found' })
+      console.log(`  ✗ ${label}: no price found`)
+      results.push({ routeId: route.id, success: false })
     }
 
-    await page.close()
-
     // Wait between routes
-    if (routes.indexOf(route) < routes.length - 1) {
+    if (trackableRoutes.indexOf(route) < trackableRoutes.length - 1) {
       const delay = 3000 + Math.random() * 3000
       console.log(`  Waiting ${Math.round(delay / 1000)}s...`)
       await sleep(delay)
@@ -275,8 +156,8 @@ async function main() {
 
   await browser.close()
 
-  const successful = results.filter((r) => r.success).length
-  console.log(`\n=== Done: ${successful}/${routes.length} routes scraped ===`)
+  const successful = results.filter(r => r.success).length
+  console.log(`\n=== Done: ${successful}/${trackableRoutes.length} routes scraped ===`)
 }
 
 main().catch((err) => {

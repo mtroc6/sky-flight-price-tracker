@@ -28,10 +28,10 @@ export default function Watchlist() {
           </p>
         </div>
         <Link
-          to="/search"
+          to="/add"
           className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-bg-primary hover:bg-accent-dim"
         >
-          + Dodaj trase
+          + Dodaj lot
         </Link>
       </div>
 
@@ -41,12 +41,12 @@ export default function Watchlist() {
         <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-bg-card py-16">
           <div className="text-5xl">👀</div>
           <h2 className="text-lg font-semibold text-text-primary">Lista jest pusta</h2>
-          <p className="text-sm text-text-secondary">Wyszukaj loty i dodaj trasy do obserwowanych</p>
+          <p className="text-sm text-text-secondary">Wklej link z Google Flights by zaczac sledzic ceny</p>
           <Link
-            to="/search"
+            to="/add"
             className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-bg-primary hover:bg-accent-dim"
           >
-            Szukaj lotow
+            Dodaj lot
           </Link>
         </div>
       )}

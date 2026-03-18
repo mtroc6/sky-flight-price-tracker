@@ -1,46 +1,59 @@
 import { useState } from 'react'
-import { AirportSearch } from '../components/search/AirportSearch'
+import { api } from '../lib/api-client'
 import { FlightResultCard } from '../components/search/FlightResultCard'
-import { useFlightSearch } from '../hooks/useFlightSearch'
 import { useAddToWatchlist } from '../hooks/useWatchlist'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import type { FlightSearchResult } from '../types/flight'
 
 export default function Search() {
-  const [origin, setOrigin] = useState({ code: '', name: '' })
-  const [destination, setDestination] = useState({ code: '', name: '' })
-  const [departureDate, setDepartureDate] = useState('')
-  const [returnDate, setReturnDate] = useState('')
-  const [isRoundTrip, setIsRoundTrip] = useState(true)
-  const [directOnly, setDirectOnly] = useState(false)
-  const [searchParams, setSearchParams] = useState<{
-    origin: string; destination: string; departureDate: string; returnDate?: string; maxStops?: string
+  const [url, setUrl] = useState('')
+  const [flights, setFlights] = useState<FlightSearchResult[] | null>(null)
+  const [parsedInfo, setParsedInfo] = useState<{
+    origin: string; destination: string; date: string; airlineCode: string; airlineName: string;
+    flightNumber: string; trackingUrl: string; originName: string; destinationName: string
   } | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const { data: flights, isLoading, error } = useFlightSearch(searchParams)
   const addToWatchlist = useAddToWatchlist()
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!origin.code || !destination.code || !departureDate) return
-    setSearchParams({
-      origin: origin.code,
-      destination: destination.code,
-      departureDate,
-      returnDate: returnDate || undefined,
-      maxStops: directOnly ? '0' : undefined,
-    })
+    if (!url.trim()) return
+    setIsLoading(true)
+    setError(null)
+    setFlights(null)
+    setParsedInfo(null)
+    setWarning(null)
+    try {
+      const res = await api.flights.parseUrl(url.trim())
+      setFlights(res.data.flights)
+      setParsedInfo(res.data.parsed)
+      setWarning(res.data.warning ?? null)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleAddToWatchlist = (_flight: FlightSearchResult) => {
+  const handleAddToWatchlist = (flight: FlightSearchResult) => {
+    if (!parsedInfo) return
     addToWatchlist.mutate({
-      originCode: origin.code,
-      originName: origin.name,
-      destinationCode: destination.code,
-      destinationName: destination.name,
-      departureDate,
-      returnDate: returnDate || undefined,
-      isRoundTrip,
+      trackingUrl: parsedInfo.trackingUrl,
+      originCode: parsedInfo.origin,
+      originName: parsedInfo.originName,
+      destinationCode: parsedInfo.destination,
+      destinationName: parsedInfo.destinationName,
+      departureDate: parsedInfo.date,
+      flightNumber: flight.flightNumber || parsedInfo.flightNumber,
+      airline: flight.airline || parsedInfo.airlineName,
+      departureTime: flight.departureTime,
+      arrivalTime: flight.arrivalTime,
+      duration: flight.duration,
+      stops: flight.stops,
+      price: flight.price,
     })
   }
 
@@ -48,98 +61,37 @@ export default function Search() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-text-primary">Szukaj lotow</h1>
-        <p className="text-sm text-text-secondary">Znajdz najtansze loty i dodaj trasy do obserwowanych</p>
+        <p className="text-sm text-text-secondary">Wklej link do lotu z Google Flights, zeby dodac go do obserwowanych</p>
       </div>
 
       {/* Search form */}
       <form onSubmit={handleSearch} className="rounded-xl border border-border bg-bg-card p-4">
-        {/* Trip type toggle */}
-        <div className="mb-4 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => { setIsRoundTrip(false); setReturnDate('') }}
-            className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
-              !isRoundTrip
-                ? 'bg-accent text-bg-primary'
-                : 'border border-border text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            W jedna strone
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsRoundTrip(true)}
-            className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
-              isRoundTrip
-                ? 'bg-accent text-bg-primary'
-                : 'border border-border text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            Powrotny
-          </button>
-          <div className="ml-4 border-l border-border pl-4">
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
-              <input
-                type="checkbox"
-                checked={directOnly}
-                onChange={(e) => setDirectOnly(e.target.checked)}
-                className="h-4 w-4 rounded border-border bg-bg-tertiary accent-accent"
-              />
-              Tylko bezposrednie
-            </label>
-          </div>
-        </div>
-
-        <div className={`grid gap-4 sm:grid-cols-2 ${isRoundTrip ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
-          <AirportSearch
-            label="Skad"
-            value={origin.code}
-            displayValue={origin.name}
-            onSelect={(code, name) => setOrigin({ code, name })}
-            placeholder="np. Warszawa, WAW"
-          />
-          <AirportSearch
-            label="Dokad"
-            value={destination.code}
-            displayValue={destination.name}
-            onSelect={(code, name) => setDestination({ code, name })}
-            placeholder="np. Barcelona, BCN"
-          />
-          <div>
-            <label className="mb-1 block text-xs font-medium text-text-secondary">Data wylotu</label>
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label className="mb-1 block text-xs font-medium text-text-secondary">Link do lotu</label>
             <input
-              type="date"
-              value={departureDate}
-              onChange={(e) => setDepartureDate(e.target.value)}
-              className="w-full rounded-lg border border-border bg-bg-tertiary px-3 py-2.5 text-sm text-text-primary outline-none transition-colors focus:border-accent [color-scheme:dark]"
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://www.google.com/travel/flights/..."
+              className="w-full rounded-lg border border-border bg-bg-tertiary px-3 py-2.5 text-sm text-text-primary outline-none transition-colors focus:border-accent"
             />
           </div>
-          {isRoundTrip && (
-            <div>
-              <label className="mb-1 block text-xs font-medium text-text-secondary">Data powrotu</label>
-              <input
-                type="date"
-                value={returnDate}
-                onChange={(e) => setReturnDate(e.target.value)}
-                className="w-full rounded-lg border border-border bg-bg-tertiary px-3 py-2.5 text-sm text-text-primary outline-none transition-colors focus:border-accent [color-scheme:dark]"
-              />
-            </div>
-          )}
-        </div>
-        <div className="mt-4 flex justify-end">
-          <button
-            type="submit"
-            disabled={!origin.code || !destination.code || !departureDate}
-            className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-bg-primary transition-colors hover:bg-accent-dim disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Szukaj
-          </button>
+          <div className="flex items-end">
+            <button
+              type="submit"
+              disabled={!url.trim() || isLoading}
+              className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-bg-primary transition-colors hover:bg-accent-dim disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Szukaj
+            </button>
+          </div>
         </div>
       </form>
 
       {addToWatchlist.isSuccess && (
         <div className="rounded-lg border border-green-dim bg-green-dim/10 px-4 py-2 text-sm text-green">
-          Trasa dodana do obserwowanych!
+          Lot dodany do obserwowanych!
         </div>
       )}
 
@@ -147,11 +99,33 @@ export default function Search() {
 
       {error && (
         <div className="rounded-lg border border-red-dim bg-red-dim/10 px-4 py-3 text-sm text-red">
-          Blad wyszukiwania: {(error as Error).message}
+          Blad wyszukiwania: {error}
         </div>
       )}
 
-      {flights && (
+      {warning && (
+        <div className="rounded-lg border border-yellow/30 bg-yellow/5 px-4 py-3 text-sm text-yellow">
+          {warning}
+        </div>
+      )}
+
+      {parsedInfo && (
+        <div className="rounded-lg border border-border bg-bg-card px-4 py-3 text-sm text-text-secondary">
+          <span className="font-mono font-semibold text-accent">{parsedInfo.origin}</span>
+          <span className="mx-2 text-text-muted">&rarr;</span>
+          <span className="font-mono font-semibold text-accent">{parsedInfo.destination}</span>
+          <span className="mx-3 text-text-muted">|</span>
+          <span>{parsedInfo.date}</span>
+          {parsedInfo.flightNumber && (
+            <>
+              <span className="mx-3 text-text-muted">|</span>
+              <span className="font-mono">{parsedInfo.flightNumber}</span>
+            </>
+          )}
+        </div>
+      )}
+
+      {flights && flights.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-text-primary">
@@ -173,7 +147,7 @@ export default function Search() {
       {flights && flights.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-bg-card py-12">
           <div className="text-3xl">:(</div>
-          <p className="text-sm text-text-muted">Nie znaleziono lotow dla podanych kryteriow</p>
+          <p className="text-sm text-text-muted">Nie znaleziono lotow dla podanego linku</p>
         </div>
       )}
     </div>

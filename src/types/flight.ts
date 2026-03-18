@@ -1,12 +1,3 @@
-export interface Location {
-  id: number
-  code: string
-  name: string
-  cityName: string
-  countryCode: string
-  type: 'airport' | 'city'
-}
-
 export interface WatchedRoute {
   id: number
   originCode: string
@@ -14,11 +5,8 @@ export interface WatchedRoute {
   destinationCode: string
   destinationName: string
   departureDate: string
-  returnDate: string | null
-  isRoundTrip: boolean
-  flexDays: number
-  cabinClass: 'economy' | 'business' | 'first'
-  adults: number
+  flightNumber: string | null
+  trackingUrl: string | null
   isActive: boolean
   createdAt: string
   lastChecked: string | null
@@ -37,8 +25,7 @@ export interface PriceSnapshot {
   priceCents: number
   airline: string | null
   stops: number
-  bookingLink: string | null
-  source: 'kiwi' | 'serpapi' | 'google'
+  source: 'serpapi' | 'google'
   fetchedAt: string
 }
 
@@ -47,6 +34,7 @@ export interface FlightSearchResult {
   price: number
   priceCurrency: string
   airline: string
+  airlineCode: string
   airlineLogo: string | null
   departureTime: string
   arrivalTime: string
@@ -55,21 +43,5 @@ export interface FlightSearchResult {
   stopCities: string[]
   origin: string
   destination: string
-  bookingLink: string | null
-  returnDepartureTime?: string
-  returnArrivalTime?: string
-  returnDuration?: number
-  returnStops?: number
-}
-
-export interface AlternativeRoute {
-  id: number
-  routeId: number
-  originCode: string
-  destinationCode: string
-  priceCents: number
-  airline: string | null
-  stops: number
-  bookingLink: string | null
-  foundAt: string
+  flightNumber: string
 }

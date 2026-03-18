@@ -57,11 +57,17 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightS
     const depAirport = firstLeg.departure_airport as Record<string, string>
     const arrAirport = lastLeg.arrival_airport as Record<string, string>
 
+    // Extract flight number
+    const flightNum = (firstLeg.flight_number as string) || ''
+    // Extract airline code from flight number (e.g. "FR 3047" -> "FR")
+    const airlineCodeMatch = flightNum.match(/^([A-Z0-9]{2})/)
+
     const result: FlightSearchResult = {
       id: `serpapi-${index}-${Date.now()}`,
       price: flight.price as number,
       priceCurrency: params.currency || 'PLN',
       airline: (firstLeg.airline as string) || '',
+      airlineCode: airlineCodeMatch ? airlineCodeMatch[1] : '',
       airlineLogo: (firstLeg.airline_logo as string) || null,
       departureTime: depAirport.time || '',
       arrivalTime: arrAirport.time || '',
@@ -73,14 +79,7 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightS
       }),
       origin: depAirport.name || depAirport.id || '',
       destination: arrAirport.name || arrAirport.id || '',
-      bookingLink: null,
-    }
-
-    // If there's a departure_token, we could fetch return flights
-    // but for now we just mark the type
-    if (flight.type === 'Round trip') {
-      result.returnDuration = 0
-      result.returnStops = 0
+      flightNumber: flightNum,
     }
 
     return result

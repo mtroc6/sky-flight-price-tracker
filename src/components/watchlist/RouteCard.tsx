@@ -23,9 +23,9 @@ export function RouteCard({ route, onDelete, onToggle }: RouteCardProps) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
             <span className="font-mono text-lg font-bold text-accent">{route.destinationCode}</span>
-            {route.isRoundTrip && (
-              <span className="rounded bg-blue/10 px-1.5 py-0.5 text-[10px] font-medium text-blue">
-                W obie strony
+            {route.flightNumber && (
+              <span className="rounded bg-blue/10 px-1.5 py-0.5 text-[10px] font-mono font-medium text-blue">
+                {route.flightNumber}
               </span>
             )}
           </div>
@@ -34,8 +34,6 @@ export function RouteCard({ route, onDelete, onToggle }: RouteCardProps) {
           </div>
           <div className="mt-2 flex items-center gap-3 text-xs text-text-muted">
             <span>{route.departureDate}</span>
-            {route.returnDate && <span>Powrot: {route.returnDate}</span>}
-            {route.flexDays > 0 && <span>&plusmn;{route.flexDays} dni</span>}
           </div>
           {route.bestAirline && (
             <div className="mt-2 flex items-center gap-3 text-xs text-text-secondary">

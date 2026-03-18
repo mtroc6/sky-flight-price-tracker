@@ -3,7 +3,7 @@ import { clsx } from 'clsx'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: DashboardIcon },
-  { path: '/search', label: 'Szukaj lotow', icon: SearchIcon },
+  { path: '/add', label: 'Dodaj lot', icon: SearchIcon },
   { path: '/watchlist', label: 'Obserwowane', icon: WatchlistIcon },
   { path: '/settings', label: 'Ustawienia', icon: SettingsIcon },
 ]

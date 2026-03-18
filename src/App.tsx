@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import Search from './pages/Search'
 import Watchlist from './pages/Watchlist'
 import RouteDetail from './pages/RouteDetail'
+import AddFlight from './pages/AddFlight'
 import Settings from './pages/Settings'
 
 export default function App() {
@@ -12,6 +13,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/add" element={<AddFlight />} />
         <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/route/:id" element={<RouteDetail />} />
         <Route path="/settings" element={<Settings />} />

@@ -1,28 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import { api } from '../lib/api-client'
+// Flight search hook - stub
+// The old api.flights.search has been removed.
+// Flight parsing is now done via api.flights.parseUrl in the Search page directly.
 
-interface SearchParams {
-  origin: string
-  destination: string
-  departureDate: string
-  returnDate?: string
-  adults?: string
-  cabinClass?: string
-  maxStops?: string
-}
-
-export function useFlightSearch(params: SearchParams | null) {
-  const searchParams: Record<string, string> = {}
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => {
-      if (v) searchParams[k] = v
-    })
-  }
-
-  return useQuery({
-    queryKey: ['flights', params],
-    queryFn: () => api.flights.search(searchParams),
-    enabled: !!params && !!params.origin && !!params.destination && !!params.departureDate,
-    select: (res) => res.data,
-  })
-}
+export {}

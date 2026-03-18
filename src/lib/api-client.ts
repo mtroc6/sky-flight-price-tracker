@@ -18,33 +18,41 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  locations: {
-    search: (query: string) =>
-      request<{ data: Array<{ code: string; name: string; cityName: string; countryCode: string }> }>(
-        `/locations/search?q=${encodeURIComponent(query)}`
-      ),
-  },
-
   flights: {
-    search: (params: Record<string, string>) => {
-      const qs = new URLSearchParams(params).toString()
-      return request<{ data: import('../types/flight').FlightSearchResult[] }>(
-        `/search/flights?${qs}`
-      )
-    },
+    parseUrl: (url: string) =>
+      request<{
+        data: {
+          parsed: {
+            origin: string
+            destination: string
+            date: string
+            airlineCode: string
+            airlineName: string
+            flightNumber: string
+            trackingUrl: string
+            originName: string
+            destinationName: string
+          }
+          flights: import('../types/flight').FlightSearchResult[]
+          warning?: string
+        }
+      }>('/flights/parse-url', {
+        method: 'POST',
+        body: JSON.stringify({ url }),
+      }),
   },
 
   watchlist: {
     list: () =>
       request<{ data: import('../types/flight').WatchedRoute[] }>('/watchlist'),
 
-    create: (params: import('../types/api').WatchlistCreateParams) =>
+    create: (params: import('../types/api').AddFlightParams) =>
       request<{ data: import('../types/flight').WatchedRoute }>('/watchlist', {
         method: 'POST',
         body: JSON.stringify(params),
       }),
 
-    update: (id: number, params: import('../types/api').WatchlistUpdateParams) =>
+    update: (id: number, params: { isActive?: boolean }) =>
       request<{ data: import('../types/flight').WatchedRoute }>(`/watchlist/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(params),

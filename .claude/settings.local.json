@@ -5,7 +5,14 @@
       "Bash(npm create:*)",
       "Bash(npx create-vite@latest sky-temp --template react-ts)",
       "Bash(npm install:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx vite:*)",
+      "Bash(node -e \":*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh run:*)",
+      "Bash(npx playwright:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx drizzle-kit:*)"
     ]
   }
 }

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api-client'
-import type { WatchlistCreateParams, WatchlistUpdateParams } from '../types/api'
+import type { AddFlightParams } from '../types/api'
 
 export function useWatchlist() {
   return useQuery({
@@ -13,7 +13,7 @@ export function useWatchlist() {
 export function useAddToWatchlist() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (params: WatchlistCreateParams) => api.watchlist.create(params),
+    mutationFn: (params: AddFlightParams) => api.watchlist.create(params),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['watchlist'] }),
   })
 }
@@ -21,7 +21,7 @@ export function useAddToWatchlist() {
 export function useUpdateWatchlist() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...params }: WatchlistUpdateParams & { id: number }) =>
+    mutationFn: ({ id, ...params }: { id: number; isActive?: boolean }) =>
       api.watchlist.update(id, params),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['watchlist'] }),
   })

@@ -3,7 +3,7 @@ import { clsx } from 'clsx'
 
 const mobileNav = [
   { path: '/', label: 'Pulpit' },
-  { path: '/search', label: 'Szukaj' },
+  { path: '/add', label: 'Dodaj' },
   { path: '/watchlist', label: 'Obserwowane' },
   { path: '/settings', label: 'Ustawienia' },
 ]

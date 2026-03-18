@@ -130,9 +130,9 @@ export default function RouteDetail() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
                 <span className="font-mono text-2xl font-bold text-accent">{route.destinationCode}</span>
-                {route.isRoundTrip && (
-                  <span className="rounded bg-blue/10 px-2 py-0.5 text-xs font-medium text-blue">
-                    W obie strony
+                {route.flightNumber && (
+                  <span className="rounded bg-blue/10 px-2 py-0.5 text-xs font-mono font-medium text-blue">
+                    {route.flightNumber}
                   </span>
                 )}
               </div>
@@ -141,9 +141,6 @@ export default function RouteDetail() {
               </p>
               <div className="mt-3 flex gap-4 text-xs text-text-muted">
                 <span>Wylot: {route.departureDate}</span>
-                {route.returnDate && <span>Powrot: {route.returnDate}</span>}
-                <span>Klasa: {route.cabinClass}</span>
-                {route.flexDays > 0 && <span>&plusmn;{route.flexDays} dni</span>}
               </div>
               {route.bestAirline && (
                 <div className="mt-3 flex items-center gap-4 rounded-lg bg-bg-tertiary px-3 py-2 text-sm">

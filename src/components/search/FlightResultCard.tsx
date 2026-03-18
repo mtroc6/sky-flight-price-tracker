@@ -61,30 +61,13 @@ export function FlightResultCard({ flight, onAddToWatchlist }: FlightResultCardP
             </div>
           </div>
 
-          {/* Return */}
-          {flight.returnDepartureTime && (
-            <div className="mt-3 flex items-center gap-3 border-t border-border/50 pt-3">
-              <div className="text-right">
-                <div className="font-mono text-sm text-text-primary">
-                  {formatTime(flight.returnDepartureTime)}
-                </div>
-              </div>
-              <div className="flex flex-1 flex-col items-center">
-                <div className="relative my-1 h-px w-full bg-border" />
-                <div className="text-[10px] text-text-muted">
-                  {flight.returnStops === 0 ? 'Bezposredni' : `${flight.returnStops} przesiadka`}
-                </div>
-              </div>
-              <div>
-                <div className="font-mono text-sm text-text-primary">
-                  {formatTime(flight.returnArrivalTime!)}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Airline */}
-          <div className="mt-2 text-xs text-text-secondary">{flight.airline}</div>
+          {/* Airline & flight number */}
+          <div className="mt-2 text-xs text-text-secondary">
+            {flight.airline}
+            {flight.flightNumber && (
+              <span className="ml-2 font-mono text-text-muted">{flight.flightNumber}</span>
+            )}
+          </div>
         </div>
 
         {/* Price + Actions */}

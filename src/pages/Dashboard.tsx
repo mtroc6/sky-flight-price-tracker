@@ -79,7 +79,6 @@ export default function Dashboard() {
 
                 <div className="text-xs text-text-muted">
                   {route.departureDate}
-                  {route.returnDate && ` → ${route.returnDate}`}
                 </div>
 
                 {route.currentMinPrice != null && route.previousMinPrice != null && (
