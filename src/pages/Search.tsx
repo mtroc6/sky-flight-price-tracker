@@ -32,7 +32,7 @@ export default function Search() {
     })
   }
 
-  const handleAddToWatchlist = (flight: FlightSearchResult) => {
+  const handleAddToWatchlist = (_flight: FlightSearchResult) => {
     addToWatchlist.mutate({
       originCode: origin.code,
       originName: origin.name,

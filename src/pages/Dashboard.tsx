@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
-import { SparklineChart } from '../components/charts/SparklineChart'
 
 export default function Dashboard() {
   const { data: routes, isLoading } = useWatchlist()

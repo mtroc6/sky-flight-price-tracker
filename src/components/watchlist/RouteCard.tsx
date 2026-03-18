@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
 import type { WatchedRoute } from '../../types/flight'
 import { PriceDisplay } from '../common/PriceDisplay'
-import { SparklineChart } from '../charts/SparklineChart'
 
 interface RouteCardProps {
   route: WatchedRoute
@@ -11,11 +10,6 @@ interface RouteCardProps {
 }
 
 export function RouteCard({ route, onDelete, onToggle }: RouteCardProps) {
-  const priceChange = route.currentMinPrice && route.previousMinPrice
-    ? route.currentMinPrice - route.previousMinPrice
-    : 0
-  const isDown = priceChange < 0
-
   return (
     <Link
       to={`/route/${route.id}`}
