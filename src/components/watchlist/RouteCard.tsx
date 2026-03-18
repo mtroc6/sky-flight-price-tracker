@@ -36,23 +36,25 @@ export function RouteCard({ route, onDelete, onToggle }: RouteCardProps) {
             <span>{route.departureDate}</span>
           </div>
           {route.bestAirline && (
-            <div className="mt-2 flex items-center gap-3 text-xs text-text-secondary">
-              <span className="font-medium">{route.bestAirline}</span>
+            <div className="mt-2 space-y-0.5 text-xs text-text-secondary">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{route.bestAirline}</span>
+                <span className={route.bestStops === 0 ? 'text-green' : 'text-text-muted'}>
+                  {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
+                </span>
+              </div>
               {route.bestDepartureTime && route.bestArrivalTime && (
-                <span>
-                  {route.bestDepartureTime.split(' ')[1]?.slice(0, 5) || route.bestDepartureTime}
-                  {' → '}
-                  {route.bestArrivalTime.split(' ')[1]?.slice(0, 5) || route.bestArrivalTime}
-                </span>
+                <div className="flex items-center gap-2 text-text-muted">
+                  <span>
+                    {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} → {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
+                  </span>
+                  {route.bestDuration != null && route.bestDuration > 0 && (
+                    <span>
+                      {Math.floor(route.bestDuration / 3600)}h {Math.floor((route.bestDuration % 3600) / 60)}m
+                    </span>
+                  )}
+                </div>
               )}
-              {route.bestDuration != null && route.bestDuration > 0 && (
-                <span className="text-text-muted">
-                  {Math.floor(route.bestDuration / 3600)}h {Math.floor((route.bestDuration % 3600) / 60)}m
-                </span>
-              )}
-              <span className="text-text-muted">
-                {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
-              </span>
             </div>
           )}
         </div>

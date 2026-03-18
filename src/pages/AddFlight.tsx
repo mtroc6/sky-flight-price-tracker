@@ -102,19 +102,19 @@ export default function AddFlight() {
         <p className="mb-3 text-xs text-text-muted">
           Wyszukaj lot na google.com/travel/flights → kliknij w lot → skopiuj URL z paska adresu
         </p>
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleParseUrl()}
             placeholder="https://www.google.com/travel/flights/booking?tfs=..."
-            className="flex-1 rounded-lg border border-border bg-bg-tertiary px-4 py-3 text-sm text-text-primary placeholder-text-muted outline-none transition-colors focus:border-accent"
+            className="w-full rounded-lg border border-border bg-bg-tertiary px-4 py-3 text-sm text-text-primary placeholder-text-muted outline-none transition-colors focus:border-accent sm:flex-1"
           />
           <button
             onClick={handleParseUrl}
             disabled={!url.trim() || isLoading}
-            className="rounded-lg bg-accent px-6 py-3 text-sm font-medium text-bg-primary transition-colors hover:bg-accent-dim disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full rounded-lg bg-accent px-6 py-3 text-sm font-medium text-bg-primary transition-colors hover:bg-accent-dim disabled:opacity-40 disabled:cursor-not-allowed sm:w-auto"
           >
             {isLoading ? 'Analizuje...' : 'Analizuj'}
           </button>

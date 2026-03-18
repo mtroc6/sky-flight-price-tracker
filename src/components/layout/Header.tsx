@@ -20,7 +20,7 @@ export function Header() {
       </div>
 
       {/* Mobile nav */}
-      <nav className="ml-4 flex gap-1 overflow-x-auto lg:hidden">
+      <nav className="ml-4 flex gap-1 overflow-x-auto lg:hidden" style={{ scrollbarWidth: 'none' }}>
         {mobileNav.map((item) => (
           <NavLink
             key={item.path}
