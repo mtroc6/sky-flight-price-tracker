@@ -29,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Check cooldown — 1 hour between manual refreshes
   if (route.lastChecked) {
     const lastChecked = new Date(route.lastChecked)
-    const cooldownMs = 60 * 60 * 1000 // 1 hour
+    const cooldownMs = 5 * 60 * 1000 // 5 minutes
     const elapsed = Date.now() - lastChecked.getTime()
     if (elapsed < cooldownMs) {
       const remainingMs = cooldownMs - elapsed

@@ -167,9 +167,15 @@ export default function AddFlight() {
       {/* Flight selection */}
       {flights && flights.length > 0 && !success && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-text-primary">
-            {flights.length === 1 ? 'Znaleziony lot' : 'Wybierz lot do sledzenia'}
-          </h2>
+          <div>
+            <h2 className="text-lg font-semibold text-text-primary">
+              {flights.length === 1 ? 'Znaleziony lot' : 'Wybierz lot do sledzenia'}
+            </h2>
+            <p className="mt-1 text-xs text-text-muted">
+              Cena moze sie nieznacznie roznic od Google Flights — pobieramy ja bezposrednio od linii lotniczych.
+              Sluzy do identyfikacji lotu, potem sledzenie odbywa sie przez Google Flights.
+            </p>
+          </div>
 
           {flights.map((flight) => (
             <div

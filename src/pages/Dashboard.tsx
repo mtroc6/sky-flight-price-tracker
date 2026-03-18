@@ -41,15 +41,46 @@ export default function Dashboard() {
 
       {/* Routes overview */}
       {!isLoading && activeRoutes.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-bg-card py-16">
+        <div className="flex flex-col items-center justify-center gap-6 rounded-xl border border-border bg-bg-card py-12 px-8">
           <div className="text-5xl">✈</div>
-          <h2 className="text-lg font-semibold text-text-primary">Brak obserwowanych tras</h2>
-          <p className="text-sm text-text-secondary">Dodaj pierwsza trase, zeby zaczac sledzic ceny</p>
+          <h2 className="text-lg font-semibold text-text-primary">Zacznij sledzic ceny lotow</h2>
+
+          <div className="w-full max-w-md space-y-4">
+            <div className="flex gap-3">
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-xs font-bold text-accent">1</div>
+              <div>
+                <p className="text-sm font-medium text-text-primary">Wyszukaj lot na Google Flights</p>
+                <p className="text-xs text-text-muted">Wejdz na google.com/travel/flights i znajdz interesujacy Cie lot</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-xs font-bold text-accent">2</div>
+              <div>
+                <p className="text-sm font-medium text-text-primary">Kliknij w konkretny lot</p>
+                <p className="text-xs text-text-muted">Otworzy sie strona rezerwacji z detalami lotu</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-xs font-bold text-accent">3</div>
+              <div>
+                <p className="text-sm font-medium text-text-primary">Skopiuj URL i wklej tutaj</p>
+                <p className="text-xs text-text-muted">Skopiuj adres z paska przegladarki i wklej go w &quot;Dodaj lot&quot;</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-mono text-xs font-bold text-accent">4</div>
+              <div>
+                <p className="text-sm font-medium text-text-primary">Sledzenie automatyczne</p>
+                <p className="text-xs text-text-muted">Cena bedzie sprawdzana co godzine. Zobaczysz wykres zmian w czasie.</p>
+              </div>
+            </div>
+          </div>
+
           <Link
-            to="/search"
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-bg-primary hover:bg-accent-dim"
+            to="/add"
+            className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-bg-primary hover:bg-accent-dim"
           >
-            Szukaj lotow
+            Dodaj pierwszy lot
           </Link>
         </div>
       )}

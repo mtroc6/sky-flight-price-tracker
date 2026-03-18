@@ -1,51 +1,42 @@
-import type { OHLCData, PricePoint, SparklineData, TimeRange } from '../types/chart'
+import type { OHLCData, PricePoint, TimeRange, CandleInterval } from '../types/chart'
 import type { PriceSnapshot } from '../types/flight'
 
-function getWeekStart(dateStr: string): string {
-  const date = new Date(dateStr)
-  const day = date.getDay()
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1)
-  const monday = new Date(date.setDate(diff))
-  return monday.toISOString().split('T')[0]
+function getGroupKey(dateStr: string, interval: CandleInterval): string {
+  const d = new Date(dateStr)
+  switch (interval) {
+    case 'hourly':
+      return `${d.toISOString().slice(0, 13)}:00` // 2026-03-18T15:00
+    case 'daily':
+      return d.toISOString().split('T')[0] // 2026-03-18
+    case 'weekly': {
+      const day = d.getDay()
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+      const monday = new Date(d)
+      monday.setDate(diff)
+      return monday.toISOString().split('T')[0]
+    }
+    case 'monthly':
+      return d.toISOString().slice(0, 7) // 2026-03
+  }
 }
 
-export function snapshotsToOHLC(snapshots: PriceSnapshot[], useDaily: boolean = false): OHLCData[] {
+export function snapshotsToOHLC(snapshots: PriceSnapshot[], interval: CandleInterval): OHLCData[] {
   if (snapshots.length === 0) return []
 
   const priceInUnits = (cents: number) => cents / 100
 
-  if (useDaily) {
-    const byDay = new Map<string, number[]>()
-    for (const s of snapshots) {
-      const day = s.fetchedAt.split('T')[0]
-      const existing = byDay.get(day) || []
-      existing.push(s.priceCents)
-      byDay.set(day, existing)
-    }
-
-    return Array.from(byDay.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([day, prices]) => ({
-        time: day,
-        open: priceInUnits(prices[0]),
-        high: priceInUnits(Math.max(...prices)),
-        low: priceInUnits(Math.min(...prices)),
-        close: priceInUnits(prices[prices.length - 1]),
-      }))
-  }
-
-  const byWeek = new Map<string, number[]>()
+  const grouped = new Map<string, number[]>()
   for (const s of snapshots) {
-    const week = getWeekStart(s.fetchedAt)
-    const existing = byWeek.get(week) || []
+    const key = getGroupKey(s.fetchedAt, interval)
+    const existing = grouped.get(key) || []
     existing.push(s.priceCents)
-    byWeek.set(week, existing)
+    grouped.set(key, existing)
   }
 
-  return Array.from(byWeek.entries())
+  return Array.from(grouped.entries())
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([week, prices]) => ({
-      time: week,
+    .map(([time, prices]) => ({
+      time,
       open: priceInUnits(prices[0]),
       high: priceInUnits(Math.max(...prices)),
       low: priceInUnits(Math.min(...prices)),
@@ -63,25 +54,15 @@ export function snapshotsToPricePoints(snapshots: PriceSnapshot[]): PricePoint[]
     }))
 }
 
-export function snapshotsToSparkline(snapshots: PriceSnapshot[], limit: number = 14): SparklineData {
-  const sorted = [...snapshots].sort((a, b) => a.fetchedAt.localeCompare(b.fetchedAt))
-  const recent = sorted.slice(-limit)
-  return {
-    prices: recent.map((s) => s.priceCents / 100),
-    dates: recent.map((s) => s.fetchedAt.split('T')[0]),
-  }
-}
-
 export function filterByTimeRange(snapshots: PriceSnapshot[], range: TimeRange): PriceSnapshot[] {
   if (range === 'ALL') return snapshots
 
   const now = new Date()
   const daysMap: Record<string, number> = {
+    '1D': 1,
     '1W': 7,
     '1M': 30,
     '3M': 90,
-    '6M': 180,
-    '1Y': 365,
   }
 
   const days = daysMap[range] || 30
@@ -90,11 +71,12 @@ export function filterByTimeRange(snapshots: PriceSnapshot[], range: TimeRange):
   return snapshots.filter((s) => new Date(s.fetchedAt) >= cutoff)
 }
 
-export function shouldUseDailyCandles(snapshots: PriceSnapshot[]): boolean {
-  if (snapshots.length === 0) return true
-  const dates = snapshots.map((s) => new Date(s.fetchedAt))
-  const minDate = Math.min(...dates.map((d) => d.getTime()))
-  const maxDate = Math.max(...dates.map((d) => d.getTime()))
-  const weeks = (maxDate - minDate) / (7 * 24 * 60 * 60 * 1000)
-  return weeks < 4
+export function bestIntervalForRange(range: TimeRange): CandleInterval {
+  switch (range) {
+    case '1D': return 'hourly'
+    case '1W': return 'hourly'
+    case '1M': return 'daily'
+    case '3M': return 'weekly'
+    case 'ALL': return 'weekly'
+  }
 }

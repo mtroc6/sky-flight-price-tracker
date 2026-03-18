@@ -6,12 +6,12 @@ import { CandlestickChart } from '../components/charts/CandlestickChart'
 import { PriceLineChart } from '../components/charts/PriceLineChart'
 import { PriceDisplay } from '../components/common/PriceDisplay'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
-import { snapshotsToOHLC, snapshotsToPricePoints, shouldUseDailyCandles, filterByTimeRange } from '../lib/chart-transforms'
+import { snapshotsToOHLC, snapshotsToPricePoints, filterByTimeRange, bestIntervalForRange } from '../lib/chart-transforms'
 import { api } from '../lib/api-client'
 import { useQueryClient } from '@tanstack/react-query'
 import type { TimeRange } from '../types/chart'
 
-const REFRESH_COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
+const REFRESH_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
 
 function useTimeAgo(date: string | null) {
   const [text, setText] = useState('')
@@ -68,7 +68,8 @@ function useRefreshCooldown(lastChecked: string | null) {
   return { canRefresh, remainingText }
 }
 
-const timeRanges: TimeRange[] = ['1W', '1M', '3M', '6M', '1Y', 'ALL']
+const timeRanges: TimeRange[] = ['1D', '1W', '1M', '3M', 'ALL']
+const rangeLabels: Record<TimeRange, string> = { '1D': '24h', '1W': '7d', '1M': '30d', '3M': '90d', 'ALL': 'Wszystko' }
 
 export default function RouteDetail() {
   const { id } = useParams<{ id: string }>()
@@ -102,8 +103,8 @@ export default function RouteDetail() {
   }, [canRefresh, isRefreshing, routeId, queryClient])
 
   const filteredSnapshots = snapshots ? filterByTimeRange(snapshots, timeRange) : []
-  const useDaily = shouldUseDailyCandles(filteredSnapshots)
-  const ohlcData = snapshotsToOHLC(filteredSnapshots, useDaily)
+  const candleInterval = bestIntervalForRange(timeRange)
+  const ohlcData = snapshotsToOHLC(filteredSnapshots, candleInterval)
   const lineData = snapshotsToPricePoints(filteredSnapshots)
 
   return (
@@ -189,6 +190,8 @@ export default function RouteDetail() {
               ) : (
                 <span>Brak danych cenowych</span>
               )}
+              <span className="text-text-muted">·</span>
+              <span>Auto: co 1h (7-22), co 3h (noc)</span>
             </div>
             <div className="flex items-center gap-3">
               {!canRefresh && remainingText && (
@@ -230,7 +233,7 @@ export default function RouteDetail() {
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
-              {range}
+              {rangeLabels[range]}
             </button>
           ))}
         </div>
