@@ -1,0 +1,18 @@
+name: Fetch Flight Prices
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 6:00 UTC
+    - cron: '0 18 * * *'  # 18:00 UTC
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger price fetch
+        run: |
+          curl -X POST "${{ secrets.APP_URL }}/api/cron/fetch-prices" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --fail --silent --show-error
