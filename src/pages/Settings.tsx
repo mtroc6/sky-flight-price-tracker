@@ -6,7 +6,7 @@ export default function Settings() {
         <p className="text-sm text-text-secondary">Informacje o aplikacji</p>
       </div>
 
-      <div className="max-w-2xl space-y-6">
+      <div className="space-y-6">
         {/* How it works + Schedule */}
         <div className="rounded-xl border border-border bg-bg-card p-6">
           <h2 className="text-sm font-semibold text-text-primary">Jak to dziala</h2>
