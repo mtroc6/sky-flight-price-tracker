@@ -7,6 +7,7 @@ export interface WatchedRoute {
   departureDate: string
   flightNumber: string | null
   trackingUrl: string | null
+  group: string | null
   isActive: boolean
   createdAt: string
   lastChecked: string | null

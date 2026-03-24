@@ -55,6 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           bestArrivalTime: body.arrivalTime || null,
           bestDuration: body.duration || null,
           bestStops: body.stops ?? null,
+          group: body.group || null,
           currentMinPrice: body.price ? Math.round(body.price * 100) : null,
           lastChecked: body.price ? new Date() : null,
         })

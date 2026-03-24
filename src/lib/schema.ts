@@ -9,6 +9,7 @@ export const watchedRoutes = pgTable('watched_routes', {
   departureDate: text('departure_date').notNull(),
   flightNumber: text('flight_number'),
   trackingUrl: text('tracking_url'),
+  group: text('group_name'),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   lastChecked: timestamp('last_checked'),

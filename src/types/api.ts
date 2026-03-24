@@ -23,4 +23,5 @@ export interface AddFlightParams {
   duration: number
   stops: number
   price: number
+  group?: string
 }

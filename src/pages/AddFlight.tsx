@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api-client'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { useQueryClient } from '@tanstack/react-query'
+import { useWatchlist } from '../hooks/useWatchlist'
 import type { FlightSearchResult } from '../types/flight'
 
 function formatTime(timeStr: string): string {
@@ -19,6 +20,7 @@ function formatDuration(seconds: number): string {
 
 export default function AddFlight() {
   const [url, setUrl] = useState('')
+  const [group, setGroup] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [flights, setFlights] = useState<FlightSearchResult[] | null>(null)
@@ -33,6 +35,12 @@ export default function AddFlight() {
 
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+
+  // Get existing groups from watchlist
+  const { data: routes } = useWatchlist()
+  const existingGroups = [...new Set(
+    (routes || []).map(r => r.group).filter((g): g is string => !!g)
+  )]
 
   const handleParseUrl = async () => {
     if (!url.trim()) return
@@ -75,6 +83,7 @@ export default function AddFlight() {
         duration: flight.duration,
         stops: flight.stops,
         price: flight.price,
+        group: group.trim() || undefined,
       })
 
       queryClient.invalidateQueries({ queryKey: ['watchlist'] })
@@ -95,7 +104,7 @@ export default function AddFlight() {
       </div>
 
       {/* URL input */}
-      <div className="rounded-xl border border-border bg-bg-card p-6">
+      <div className="rounded-xl border border-border bg-bg-card p-4 sm:p-6">
         <label className="mb-2 block text-sm font-medium text-text-secondary">
           Link z Google Flights
         </label>
@@ -144,11 +153,9 @@ export default function AddFlight() {
       {/* Parsed info */}
       {parsedData && !isLoading && (
         <div className="rounded-xl border border-border bg-bg-card p-4">
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="font-mono text-lg font-bold text-accent">{parsedData.origin}</span>
-            <svg className="h-4 w-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            <span className="text-text-muted">&rarr;</span>
             <span className="font-mono text-lg font-bold text-accent">{parsedData.destination}</span>
             <span className="text-text-muted">|</span>
             <span className="text-text-secondary">{parsedData.date}</span>
@@ -164,6 +171,41 @@ export default function AddFlight() {
         </div>
       )}
 
+      {/* Group selector - show when flights are found */}
+      {flights && flights.length > 0 && !success && (
+        <div className="rounded-xl border border-border bg-bg-card p-4 sm:p-6">
+          <label className="mb-2 block text-sm font-medium text-text-secondary">
+            Grupa (opcjonalnie)
+          </label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              type="text"
+              value={group}
+              onChange={(e) => setGroup(e.target.value)}
+              placeholder="np. Dawid, Moje, Rodzice..."
+              className="w-full rounded-lg border border-border bg-bg-tertiary px-3 py-2 text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent sm:w-64"
+            />
+            {existingGroups.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {existingGroups.map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => setGroup(g)}
+                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                      group === g
+                        ? 'bg-accent text-bg-primary'
+                        : 'border border-border text-text-muted hover:text-text-primary'
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Flight selection */}
       {flights && flights.length > 0 && !success && (
         <div className="space-y-3">
@@ -173,7 +215,6 @@ export default function AddFlight() {
             </h2>
             <p className="mt-1 text-xs text-text-muted">
               Cena moze sie nieznacznie roznic od Google Flights — pobieramy ja bezposrednio od linii lotniczych.
-              Sluzy do identyfikacji lotu, potem sledzenie odbywa sie przez Google Flights.
             </p>
           </div>
 
@@ -182,44 +223,43 @@ export default function AddFlight() {
               key={flight.id}
               className="rounded-xl border border-border bg-bg-card p-4 transition-colors hover:border-accent/50"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6">
+              {/* Mobile: stacked layout */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
                   {/* Airline */}
-                  <div className="w-24">
-                    <div className="text-sm font-medium text-text-primary">{flight.airline}</div>
+                  <div>
+                    <span className="text-sm font-medium text-text-primary">{flight.airline}</span>
                     {flight.flightNumber && (
-                      <div className="font-mono text-xs text-text-muted">{flight.flightNumber}</div>
+                      <span className="ml-2 font-mono text-xs text-text-muted">{flight.flightNumber}</span>
                     )}
                   </div>
 
-                  {/* Times */}
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-lg font-semibold text-text-primary">
+                  {/* Times - inline on mobile */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-mono font-semibold text-text-primary">
                       {formatTime(flight.departureTime)}
                     </span>
-                    <div className="flex flex-col items-center">
-                      <span className="text-[10px] text-text-muted">{formatDuration(flight.duration)}</span>
-                      <div className="my-0.5 h-px w-16 bg-border" />
-                      <span className="text-[10px] text-text-muted">
-                        {flight.stops === 0 ? 'Bezposredni' : `${flight.stops} przesiadka`}
-                      </span>
-                    </div>
-                    <span className="font-mono text-lg font-semibold text-text-primary">
+                    <span className="text-text-muted">&rarr;</span>
+                    <span className="font-mono font-semibold text-text-primary">
                       {formatTime(flight.arrivalTime)}
+                    </span>
+                    <span className="text-xs text-text-muted">{formatDuration(flight.duration)}</span>
+                    <span className={`text-xs ${flight.stops === 0 ? 'text-green' : 'text-text-muted'}`}>
+                      {flight.stops === 0 ? 'Bezposredni' : `${flight.stops} przesiadka`}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between gap-3 sm:gap-4">
                   <span className="font-mono text-xl font-bold text-text-primary">
                     {flight.price} <span className="text-sm text-text-muted">PLN</span>
                   </span>
                   <button
                     onClick={() => handleSelectFlight(flight)}
                     disabled={isAdding}
-                    className="rounded-lg bg-accent px-5 py-2 text-sm font-medium text-bg-primary transition-colors hover:bg-accent-dim disabled:opacity-40"
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-bg-primary transition-colors hover:bg-accent-dim disabled:opacity-40"
                   >
-                    {isAdding ? 'Dodaje...' : 'Sledz ten lot'}
+                    {isAdding ? 'Dodaje...' : 'Sledz'}
                   </button>
                 </div>
               </div>
