@@ -49,30 +49,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ data: null, message: 'Nie znaleziono lotow' })
     }
 
-    // Match by airline from the saved route
-    // Extract airline code from flight number (e.g. "FR 3047" -> "FR")
+    // Match the EXACT flight by airline + departure time
     const airlineCode = route.flightNumber?.split(' ')[0] || ''
-    const airlineName = route.bestAirline || ''
+    const savedDepTime = route.bestDepartureTime?.split(' ')[1]?.slice(0, 5) || ''
 
-    // Find matching flight by airline code or name
-    let matched = flights.find(f =>
-      (airlineCode && f.airlineCode === airlineCode) ||
-      (airlineName && f.airline.toLowerCase().includes(airlineName.toLowerCase()))
-    )
+    let matched = null
 
-    // If no exact match, try by departure time
-    if (!matched && route.bestDepartureTime) {
-      const savedTime = route.bestDepartureTime.split(' ')[1]?.slice(0, 5)
-      if (savedTime) {
-        matched = flights.find(f => {
-          const flightTime = f.departureTime.split(' ')[1]?.slice(0, 5)
-          return flightTime === savedTime
-        })
-      }
+    // Best match: same airline code + same departure time
+    if (airlineCode && savedDepTime) {
+      matched = flights.find(f => {
+        const flightTime = f.departureTime.split(' ')[1]?.slice(0, 5)
+        return f.airlineCode === airlineCode && flightTime === savedDepTime
+      })
+    }
+
+    // Fallback: same departure time only
+    if (!matched && savedDepTime) {
+      matched = flights.find(f => {
+        const flightTime = f.departureTime.split(' ')[1]?.slice(0, 5)
+        return flightTime === savedDepTime
+      })
+    }
+
+    // Fallback: same airline code, closest time
+    if (!matched && airlineCode) {
+      matched = flights.find(f => f.airlineCode === airlineCode)
     }
 
     if (!matched) {
-      return res.status(200).json({ data: null, message: `Nie znaleziono lotu ${route.flightNumber || airlineName}` })
+      return res.status(200).json({ data: null, message: `Nie znaleziono lotu ${route.flightNumber} (${savedDepTime})` })
     }
 
     const priceCents = Math.round(matched.price * 100)
@@ -80,11 +85,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await db.insert(priceSnapshots).values({
       routeId: route.id,
       priceCents,
-      airline: matched.airline,
-      stops: matched.stops,
+      airline: route.bestAirline || matched.airline,
+      stops: route.bestStops ?? matched.stops,
       source: 'serpapi',
     })
 
+    // Only update price and lastChecked — NEVER overwrite flight details
     const [updatedRoute] = await db
       .update(watchedRoutes)
       .set({
