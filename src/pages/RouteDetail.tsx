@@ -158,24 +158,39 @@ export default function RouteDetail() {
 
           {/* Flight details */}
           {route.bestAirline && (
-            <div className="mt-3 space-y-0.5 rounded-lg bg-bg-tertiary px-3 py-2 text-xs sm:text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-text-primary">{route.bestAirline}</span>
-                <span className={route.bestStops === 0 ? 'text-green' : 'text-text-muted'}>
-                  {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
-                </span>
-              </div>
-              {route.bestDepartureTime && route.bestArrivalTime && (
-                <div className="flex items-center gap-2 font-mono text-text-muted">
-                  <span>
-                    {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} → {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
+            <div className="mt-3 flex items-center gap-3">
+              <div className="flex-1 space-y-0.5 rounded-lg bg-bg-tertiary px-3 py-2 text-xs sm:text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-text-primary">{route.bestAirline}</span>
+                  <span className={route.bestStops === 0 ? 'text-green' : 'text-text-muted'}>
+                    {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
                   </span>
-                  {route.bestDuration != null && route.bestDuration > 0 && (
-                    <span>
-                      {Math.floor(route.bestDuration / 3600)}h {Math.floor((route.bestDuration % 3600) / 60)}m
-                    </span>
-                  )}
                 </div>
+                {route.bestDepartureTime && route.bestArrivalTime && (
+                  <div className="flex items-center gap-2 font-mono text-text-muted">
+                    <span>
+                      {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} → {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
+                    </span>
+                    {route.bestDuration != null && route.bestDuration > 0 && (
+                      <span>
+                        {Math.floor(route.bestDuration / 3600)}h {Math.floor((route.bestDuration % 3600) / 60)}m
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              {route.trackingUrl && (
+                <a
+                  href={route.trackingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-accent"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  Google Flights
+                </a>
               )}
             </div>
           )}
