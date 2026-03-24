@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getDb } from '../../src/lib/db'
 import { watchedRoutes, priceSnapshots } from '../../src/lib/schema'
 import { eq } from 'drizzle-orm'
-import { getMinPrice } from '../../src/lib/flights-api'
+import { searchFlights } from '../../src/lib/flights-api'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -16,7 +16,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const db = getDb()
 
-  // Get route
   const [route] = await db
     .select()
     .from(watchedRoutes)
@@ -26,40 +25,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).json({ error: 'Route not found' })
   }
 
-  // Check cooldown — 1 hour between manual refreshes
+  // Cooldown: 5 minutes
   if (route.lastChecked) {
-    const lastChecked = new Date(route.lastChecked)
-    const cooldownMs = 5 * 60 * 1000 // 5 minutes
-    const elapsed = Date.now() - lastChecked.getTime()
-    if (elapsed < cooldownMs) {
-      const remainingMs = cooldownMs - elapsed
-      const remainingMin = Math.ceil(remainingMs / 60000)
+    const elapsed = Date.now() - new Date(route.lastChecked).getTime()
+    if (elapsed < 5 * 60 * 1000) {
+      const remainingMin = Math.ceil((5 * 60 * 1000 - elapsed) / 60000)
       return res.status(429).json({
-        error: `Odczekaj jeszcze ${remainingMin} min przed kolejnym odswiezeniem`,
-        nextRefreshAt: new Date(lastChecked.getTime() + cooldownMs).toISOString(),
+        error: `Odczekaj jeszcze ${remainingMin} min`,
       })
     }
   }
 
   try {
-    const priceData = await getMinPrice(
-      route.originCode,
-      route.destinationCode,
-      route.departureDate,
-      route.returnDate || undefined,
-      route.flexDays,
-      route.cabinClass,
+    // Search all flights on this route
+    const flights = await searchFlights({
+      origin: route.originCode,
+      destination: route.destinationCode,
+      departureDate: route.departureDate,
+      currency: 'PLN',
+    })
+
+    if (flights.length === 0) {
+      return res.status(200).json({ data: null, message: 'Nie znaleziono lotow' })
+    }
+
+    // Match by airline from the saved route
+    // Extract airline code from flight number (e.g. "FR 3047" -> "FR")
+    const airlineCode = route.flightNumber?.split(' ')[0] || ''
+    const airlineName = route.bestAirline || ''
+
+    // Find matching flight by airline code or name
+    let matched = flights.find(f =>
+      (airlineCode && f.airlineCode === airlineCode) ||
+      (airlineName && f.airline.toLowerCase().includes(airlineName.toLowerCase()))
     )
 
-    if (!priceData) {
-      return res.status(200).json({ data: null, message: 'Nie znaleziono ceny' })
+    // If no exact match, try by departure time
+    if (!matched && route.bestDepartureTime) {
+      const savedTime = route.bestDepartureTime.split(' ')[1]?.slice(0, 5)
+      if (savedTime) {
+        matched = flights.find(f => {
+          const flightTime = f.departureTime.split(' ')[1]?.slice(0, 5)
+          return flightTime === savedTime
+        })
+      }
     }
+
+    if (!matched) {
+      return res.status(200).json({ data: null, message: `Nie znaleziono lotu ${route.flightNumber || airlineName}` })
+    }
+
+    const priceCents = Math.round(matched.price * 100)
 
     await db.insert(priceSnapshots).values({
       routeId: route.id,
-      priceCents: priceData.priceCents,
-      airline: priceData.airline,
-      stops: priceData.stops,
+      priceCents,
+      airline: matched.airline,
+      stops: matched.stops,
       source: 'serpapi',
     })
 
@@ -67,13 +89,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .update(watchedRoutes)
       .set({
         previousMinPrice: route.currentMinPrice,
-        currentMinPrice: priceData.priceCents,
+        currentMinPrice: priceCents,
         lastChecked: new Date(),
-        bestAirline: priceData.airline,
-        bestStops: priceData.stops,
-        bestDepartureTime: priceData.departureTime,
-        bestArrivalTime: priceData.arrivalTime,
-        bestDuration: priceData.duration,
       })
       .where(eq(watchedRoutes.id, route.id))
       .returning()
