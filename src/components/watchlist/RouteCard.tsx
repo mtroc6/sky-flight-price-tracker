@@ -5,11 +5,13 @@ import { PriceDisplay } from '../common/PriceDisplay'
 
 interface RouteCardProps {
   route: WatchedRoute
+  groups?: string[]
   onDelete?: (id: number) => void
   onToggle?: (id: number, active: boolean) => void
+  onGroupChange?: (id: number, group: string | null) => void
 }
 
-export function RouteCard({ route, onDelete, onToggle }: RouteCardProps) {
+export function RouteCard({ route, groups = [], onDelete, onToggle, onGroupChange }: RouteCardProps) {
   return (
     <Link
       to={`/route/${route.id}`}
@@ -92,7 +94,20 @@ export function RouteCard({ route, onDelete, onToggle }: RouteCardProps) {
           )}
         </div>
 
-        <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
+        <div className="flex items-center gap-1" onClick={(e) => e.preventDefault()}>
+          {onGroupChange && (
+            <select
+              value={route.group || ''}
+              onChange={(e) => onGroupChange(route.id, e.target.value || null)}
+              className="rounded bg-bg-tertiary px-1.5 py-1 text-[10px] text-text-muted outline-none focus:border-accent"
+              title="Zmien grupe"
+            >
+              <option value="">Bez grupy</option>
+              {groups.map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          )}
           {onToggle && (
             <button
               onClick={() => onToggle(route.id, !route.isActive)}

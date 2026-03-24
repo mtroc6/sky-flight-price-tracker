@@ -21,7 +21,7 @@ export function useAddToWatchlist() {
 export function useUpdateWatchlist() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...params }: { id: number; isActive?: boolean }) =>
+    mutationFn: ({ id, ...params }: { id: number; isActive?: boolean; group?: string | null }) =>
       api.watchlist.update(id, params),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['watchlist'] }),
   })

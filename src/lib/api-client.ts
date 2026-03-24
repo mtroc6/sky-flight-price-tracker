@@ -52,7 +52,7 @@ export const api = {
         body: JSON.stringify(params),
       }),
 
-    update: (id: number, params: { isActive?: boolean }) =>
+    update: (id: number, params: { isActive?: boolean; group?: string | null }) =>
       request<{ data: import('../types/flight').WatchedRoute }>(`/watchlist/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(params),

@@ -18,6 +18,10 @@ export default function Watchlist() {
     updateRoute.mutate({ id, isActive })
   }
 
+  const handleGroupChange = (id: number, group: string | null) => {
+    updateRoute.mutate({ id, group })
+  }
+
   // Group routes
   const grouped = new Map<string, typeof routes>()
   const ungrouped: typeof routes = []
@@ -84,8 +88,10 @@ export default function Watchlist() {
               <RouteCard
                 key={route.id}
                 route={route}
+                groups={groupNames}
                 onDelete={handleDelete}
                 onToggle={handleToggle}
+                onGroupChange={handleGroupChange}
               />
             ))}
           </div>
@@ -103,8 +109,10 @@ export default function Watchlist() {
               <RouteCard
                 key={route.id}
                 route={route}
+                groups={groupNames}
                 onDelete={handleDelete}
                 onToggle={handleToggle}
+                onGroupChange={handleGroupChange}
               />
             ))}
           </div>

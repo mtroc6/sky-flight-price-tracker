@@ -182,7 +182,7 @@ export default function AddFlight() {
               type="text"
               value={group}
               onChange={(e) => setGroup(e.target.value)}
-              placeholder="np. Dawid, Moje, Rodzice..."
+              placeholder="Nazwa grupy"
               className="w-full rounded-lg border border-border bg-bg-tertiary px-3 py-2 text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent sm:w-64"
             />
             {existingGroups.length > 0 && (

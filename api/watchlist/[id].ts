@@ -16,10 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const body = req.body
       const updates: Record<string, unknown> = {}
       if (body.isActive !== undefined) updates.isActive = body.isActive
-      if (body.flexDays !== undefined) updates.flexDays = body.flexDays
-      if (body.cabinClass !== undefined) updates.cabinClass = body.cabinClass
-      if (body.departureDate !== undefined) updates.departureDate = body.departureDate
-      if (body.returnDate !== undefined) updates.returnDate = body.returnDate
+      if ('group' in body) updates.group = body.group || null
 
       const [route] = await db
         .update(watchedRoutes)
