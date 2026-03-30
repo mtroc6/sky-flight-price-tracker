@@ -90,7 +90,7 @@ export function RouteCard({ route, groups = [], onDelete, onGroupChange }: Route
                 : route.isActive ? 'bg-green' : 'bg-text-muted',
             )}
           />
-          <span className="whitespace-nowrap text-[10px] text-text-muted">
+          <span className="whitespace-nowrap text-[10px] leading-none text-text-muted">
             {isArchived
               ? 'Archiwalny'
               : route.lastChecked
