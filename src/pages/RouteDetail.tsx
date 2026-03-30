@@ -148,10 +148,10 @@ export default function RouteDetail() {
               <div className="sm:text-right">
                 <PriceDisplay
                   price={route.currentMinPrice / 100}
-                  previousPrice={route.price24hAgoCents ? route.price24hAgoCents / 100 : null}
+                  previousPrice={route.previousMinPrice ? route.previousMinPrice / 100 : null}
                   size="lg"
                 />
-                <p className="text-xs text-text-muted">Aktualna cena (zmiana 24h)</p>
+                <p className="text-xs text-text-muted">Aktualna cena</p>
               </div>
             )}
           </div>

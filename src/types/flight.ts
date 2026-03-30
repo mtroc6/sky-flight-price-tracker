@@ -13,7 +13,6 @@ export interface WatchedRoute {
   lastChecked: string | null
   currentMinPrice: number | null
   previousMinPrice: number | null
-  price24hAgoCents: number | null
   bestAirline: string | null
   bestStops: number | null
   bestDepartureTime: string | null

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getDb } from '../../src/lib/db'
 import { watchedRoutes, priceSnapshots } from '../../src/lib/schema'
-import { desc, eq, and, lte, sql } from 'drizzle-orm'
+import { desc, eq, and } from 'drizzle-orm'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const db = getDb()
@@ -12,31 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .select()
         .from(watchedRoutes)
         .orderBy(desc(watchedRoutes.createdAt))
-
-      // Fetch price from ~24h ago for each route
-      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
-      const routeIds = routes.map((r) => r.id)
-
-      let prices24h: Record<number, number> = {}
-      if (routeIds.length > 0) {
-        const rows = await db.execute(sql`
-          SELECT DISTINCT ON (route_id) route_id, price_cents
-          FROM price_snapshots
-          WHERE route_id = ANY(${routeIds})
-            AND fetched_at <= ${cutoff}
-          ORDER BY route_id, fetched_at DESC
-        `)
-        for (const row of rows as any[]) {
-          prices24h[row.route_id] = row.price_cents
-        }
-      }
-
-      const data = routes.map((r) => ({
-        ...r,
-        price24hAgoCents: prices24h[r.id] ?? null,
-      }))
-
-      return res.status(200).json({ data })
+      return res.status(200).json({ data: routes })
     } catch (err) {
       return res.status(500).json({ error: (err as Error).message })
     }

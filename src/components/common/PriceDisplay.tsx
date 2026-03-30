@@ -38,7 +38,7 @@ export function PriceDisplay({ price, previousPrice, size = 'md' }: PriceDisplay
             isUp && 'text-red',
           )}
         >
-          {isUp ? '+' : ''}{diff.toLocaleString('pl-PL')} ({pctChange > 0 ? '+' : ''}{pctChange.toFixed(1)}%) 24h
+          {isUp ? '+' : ''}{diff.toLocaleString('pl-PL')} ({pctChange > 0 ? '+' : ''}{pctChange.toFixed(1)}%)
         </span>
       )}
     </div>
