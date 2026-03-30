@@ -11,7 +11,10 @@ interface RouteCardProps {
 }
 
 export function RouteCard({ route, groups = [], onDelete, onGroupChange }: RouteCardProps) {
-  const isArchived = new Date(route.departureDate + 'T23:59:59') < new Date()
+  const departureDateTime = route.bestDepartureTime
+    ? new Date(route.bestDepartureTime)
+    : new Date(route.departureDate + 'T23:59:59')
+  const isArchived = departureDateTime < new Date()
 
   return (
     <Link

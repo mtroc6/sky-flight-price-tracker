@@ -25,6 +25,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).json({ error: 'Route not found' })
   }
 
+  // Check if flight already departed
+  const departureTime = route.bestDepartureTime
+    ? new Date(route.bestDepartureTime)
+    : new Date(route.departureDate + 'T23:59:59')
+
+  if (departureTime < new Date()) {
+    await db
+      .update(watchedRoutes)
+      .set({ isActive: false })
+      .where(eq(watchedRoutes.id, route.id))
+    return res.status(200).json({ data: null, message: 'Lot juz odlecial — zarchiwizowany' })
+  }
+
   // Cooldown: 5 minutes
   if (route.lastChecked) {
     const elapsed = Date.now() - new Date(route.lastChecked).getTime()

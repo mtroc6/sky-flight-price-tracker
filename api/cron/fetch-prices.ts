@@ -32,6 +32,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const results: Array<{ routeId: number; success: boolean; price?: number; error?: string }> = []
 
     for (const route of routes) {
+      // Skip and deactivate flights that have already departed
+      const departureTime = route.bestDepartureTime
+        ? new Date(route.bestDepartureTime)
+        : new Date(route.departureDate + 'T23:59:59')
+
+      if (departureTime < new Date()) {
+        await db
+          .update(watchedRoutes)
+          .set({ isActive: false })
+          .where(eq(watchedRoutes.id, route.id))
+        results.push({ routeId: route.id, success: true, error: 'archived - flight departed' })
+        continue
+      }
+
       try {
         const priceData = await getMinPrice(
           route.originCode,
