@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../lib/api-client'
-import type { TimeRange } from '../types/chart'
 
-export function usePriceHistory(routeId: number | undefined, range?: TimeRange) {
+export function usePriceHistory(routeId: number | undefined) {
   return useQuery({
-    queryKey: ['prices', routeId, range],
-    queryFn: () => api.prices.history(routeId!, range),
+    queryKey: ['prices', routeId],
+    queryFn: () => api.prices.history(routeId!),
     enabled: !!routeId,
     select: (res) => res.data,
   })

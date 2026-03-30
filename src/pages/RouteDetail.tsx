@@ -83,7 +83,7 @@ export default function RouteDetail() {
 
   const { formatPrice } = useCurrency()
   const { data: routes } = useWatchlist()
-  const { data: snapshots, isLoading } = usePriceHistory(routeId, timeRange)
+  const { data: snapshots, isLoading } = usePriceHistory(routeId)
 
   const route = routes?.find((r) => r.id === routeId)
   const lastCheckedAgo = useTimeAgo(route?.lastChecked ?? null)
