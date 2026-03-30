@@ -51,9 +51,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           route.originCode,
           route.destinationCode,
           route.departureDate,
-          route.returnDate || undefined,
-          route.flexDays,
-          route.cabinClass,
         )
 
         if (priceData) {
@@ -62,8 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             priceCents: priceData.priceCents,
             airline: priceData.airline,
             stops: priceData.stops,
-            bookingLink: priceData.bookingLink,
-            source: 'serpapi',
+            source: 'google',
           })
 
           await db
