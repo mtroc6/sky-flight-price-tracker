@@ -150,7 +150,7 @@ export default function RouteDetail() {
               <p className="mt-1 text-xs text-text-secondary sm:text-sm">
                 {route.originName} &rarr; {route.destinationName}
               </p>
-              <p className="mt-1.5 text-xs text-text-muted">Wylot: <span className="font-mono text-sm font-semibold text-blue">{route.departureDate}</span></p>
+              <p className="mt-1.5 hidden text-xs text-text-muted sm:block">Wylot: <span className="font-mono text-sm font-semibold text-blue">{route.departureDate}</span></p>
             </div>
 
             {route.currentMinPrice != null && (
@@ -179,6 +179,7 @@ export default function RouteDetail() {
               </div>
             )}
           </div>
+          <p className="mt-2 text-xs text-text-muted sm:hidden">Wylot: <span className="font-mono text-sm font-semibold text-blue">{route.departureDate}</span></p>
 
           {/* Flight details */}
           {route.bestAirline && (
