@@ -34,19 +34,19 @@ export function RouteCard({ route, groups = [], onDelete, onGroupChange }: Route
             {route.originName} &rarr; {route.destinationName}
           </div>
           <div className="mt-2 flex items-center gap-3 text-xs text-text-muted">
-            <span>{route.departureDate}</span>
+            <span className="text-accent">{route.departureDate}</span>
           </div>
           {route.bestAirline && (
             <div className="mt-2 space-y-0.5 text-xs text-text-secondary">
               <div className="flex items-center gap-2">
                 <span className="font-medium">{route.bestAirline}</span>
-                <span className={route.bestStops === 0 ? 'text-green' : 'text-text-muted'}>
+                <span className="text-text-muted">
                   {route.bestStops === 0 ? 'Bezposredni' : `${route.bestStops} przesiadka`}
                 </span>
               </div>
               {route.bestDepartureTime && route.bestArrivalTime && (
                 <div className="flex items-center gap-2 text-text-muted">
-                  <span>
+                  <span className="text-accent">
                     {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} → {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
                   </span>
                   {route.bestDuration != null && route.bestDuration > 0 && (
@@ -75,22 +75,19 @@ export function RouteCard({ route, groups = [], onDelete, onGroupChange }: Route
       </div>
 
       {/* Bottom bar */}
-      <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-3">
-        <div className="flex items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-3">
+        <div className="flex items-center gap-1.5">
           <div
             className={clsx(
-              'h-1.5 w-1.5 rounded-full',
+              'h-1.5 w-1.5 flex-shrink-0 rounded-full',
               route.isActive ? 'bg-green' : 'bg-text-muted',
             )}
           />
-          <span className="text-[10px] text-text-muted">
-            {route.isActive ? 'Aktywna' : 'Wstrzymana'}
+          <span className="whitespace-nowrap text-[10px] text-text-muted">
+            {route.lastChecked
+              ? new Date(route.lastChecked).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+              : route.isActive ? 'Aktywna' : 'Wstrzymana'}
           </span>
-          {route.lastChecked && (
-            <span className="text-[10px] text-text-muted">
-              Sprawdzono: {new Date(route.lastChecked).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
         </div>
 
         <div className="flex items-center gap-1" onClick={(e) => e.preventDefault()}>

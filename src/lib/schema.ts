@@ -24,6 +24,12 @@ export const watchedRoutes = pgTable('watched_routes', {
   index('idx_routes_active').on(table.isActive),
 ])
 
+export const groupSettings = pgTable('group_settings', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  sortOrder: integer('sort_order').notNull().default(0),
+})
+
 export const priceSnapshots = pgTable('price_snapshots', {
   id: serial('id').primaryKey(),
   routeId: integer('route_id').notNull().references(() => watchedRoutes.id, { onDelete: 'cascade' }),

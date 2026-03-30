@@ -64,6 +64,17 @@ export const api = {
       }),
   },
 
+  groups: {
+    list: () =>
+      request<{ data: { name: string; sortOrder: number }[] }>('/watchlist/groups'),
+
+    saveOrder: (groups: string[]) =>
+      request<{ data: string[] }>('/watchlist/groups', {
+        method: 'PUT',
+        body: JSON.stringify({ groups }),
+      }),
+  },
+
   prices: {
     history: (routeId: number, range?: string) => {
       const qs = range ? `?range=${range}` : ''

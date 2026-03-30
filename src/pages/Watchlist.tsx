@@ -1,21 +1,27 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useWatchlist, useDeleteFromWatchlist, useUpdateWatchlist } from '../hooks/useWatchlist'
 import { RouteCard } from '../components/watchlist/RouteCard'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { api } from '../lib/api-client'
 
-const GROUP_ORDER_KEY = 'sky-group-order'
+function useGroupOrder() {
+  const queryClient = useQueryClient()
+  const { data: groups } = useQuery({
+    queryKey: ['group-order'],
+    queryFn: async () => {
+      const res = await api.groups.list()
+      return res.data.map((g) => g.name)
+    },
+  })
 
-function loadGroupOrder(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(GROUP_ORDER_KEY) || '[]')
-  } catch {
-    return []
-  }
-}
+  const saveMutation = useMutation({
+    mutationFn: (order: string[]) => api.groups.saveOrder(order),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['group-order'] }),
+  })
 
-function saveGroupOrder(order: string[]) {
-  localStorage.setItem(GROUP_ORDER_KEY, JSON.stringify(order))
+  return { groupOrder: groups || [], saveGroupOrder: (order: string[]) => saveMutation.mutate(order) }
 }
 
 function GroupMenu({ groupName, index, total, onRename, onMove }: {
@@ -91,7 +97,7 @@ export default function Watchlist() {
   const { data: routes, isLoading } = useWatchlist()
   const deleteRoute = useDeleteFromWatchlist()
   const updateRoute = useUpdateWatchlist()
-  const [groupOrder, setGroupOrder] = useState<string[]>(loadGroupOrder)
+  const { groupOrder, saveGroupOrder } = useGroupOrder()
 
   const handleDelete = (id: number) => {
     if (confirm('Na pewno chcesz usunac ten lot?')) {
@@ -132,7 +138,6 @@ export default function Watchlist() {
     if (swapIdx < 0 || swapIdx >= groupNames.length) return
     const newOrder = [...groupNames]
     ;[newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]]
-    setGroupOrder(newOrder)
     saveGroupOrder(newOrder)
   }
 
@@ -147,7 +152,6 @@ export default function Watchlist() {
     }
     // Update saved order
     const newOrder = groupNames.map((g) => g === oldName ? trimmed : g)
-    setGroupOrder(newOrder)
     saveGroupOrder(newOrder)
   }
 
