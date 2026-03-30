@@ -150,7 +150,7 @@ export default function RouteDetail() {
               <p className="mt-1 text-xs text-text-secondary sm:text-sm">
                 {route.originName} &rarr; {route.destinationName}
               </p>
-              <p className="mt-1 text-xs text-text-muted">Wylot: <span className="text-accent">{route.departureDate}</span></p>
+              <p className="mt-1 text-xs text-text-muted">Wylot: <span className="text-yellow">{route.departureDate}</span></p>
             </div>
 
             {route.currentMinPrice != null && (
@@ -194,7 +194,7 @@ export default function RouteDetail() {
                 </div>
                 {route.bestDepartureTime && route.bestArrivalTime && (
                   <div className="flex items-center gap-2 font-mono text-text-muted">
-                    <span className="text-accent">
+                    <span className="text-yellow">
                       {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} → {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
                     </span>
                     {route.bestDuration != null && route.bestDuration > 0 && (
