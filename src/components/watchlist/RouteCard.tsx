@@ -36,7 +36,7 @@ export function RouteCard({ route, groups = [], onDelete, onGroupChange }: Route
             {route.originName} &rarr; {route.destinationName}
           </div>
           <div className="mt-2 flex items-center gap-3 text-xs">
-            <span className="rounded bg-yellow/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-yellow">{route.departureDate}</span>
+            <span className="rounded bg-blue/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-blue">{route.departureDate}</span>
           </div>
           {route.bestAirline && (
             <div className="mt-2 space-y-0.5 text-xs text-text-secondary">
@@ -48,7 +48,7 @@ export function RouteCard({ route, groups = [], onDelete, onGroupChange }: Route
               </div>
               {route.bestDepartureTime && route.bestArrivalTime && (
                 <div className="flex items-center gap-2 text-text-muted">
-                  <span className="rounded bg-yellow/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-yellow">
+                  <span className="rounded bg-blue/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-blue">
                     {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} <span className="text-text-muted">&rarr;</span> {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
                   </span>
                   {route.bestDuration != null && route.bestDuration > 0 && (
