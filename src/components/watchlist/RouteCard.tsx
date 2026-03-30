@@ -7,11 +7,10 @@ interface RouteCardProps {
   route: WatchedRoute
   groups?: string[]
   onDelete?: (id: number) => void
-  onToggle?: (id: number, active: boolean) => void
   onGroupChange?: (id: number, group: string | null) => void
 }
 
-export function RouteCard({ route, groups = [], onDelete, onToggle, onGroupChange }: RouteCardProps) {
+export function RouteCard({ route, groups = [], onDelete, onGroupChange }: RouteCardProps) {
   return (
     <Link
       to={`/route/${route.id}`}
@@ -98,7 +97,19 @@ export function RouteCard({ route, groups = [], onDelete, onToggle, onGroupChang
           {onGroupChange && (
             <select
               value={route.group || ''}
-              onChange={(e) => onGroupChange(route.id, e.target.value || null)}
+              onChange={(e) => {
+                const val = e.target.value
+                if (val === '__new__') {
+                  const name = prompt('Nazwa nowej grupy:')
+                  if (name?.trim()) {
+                    onGroupChange(route.id, name.trim())
+                  } else {
+                    e.target.value = route.group || ''
+                  }
+                } else {
+                  onGroupChange(route.id, val || null)
+                }
+              }}
               className="rounded bg-bg-tertiary px-1.5 py-1 text-[10px] text-text-muted outline-none focus:border-accent"
               title="Zmien grupe"
             >
@@ -106,24 +117,8 @@ export function RouteCard({ route, groups = [], onDelete, onToggle, onGroupChang
               {groups.map((g) => (
                 <option key={g} value={g}>{g}</option>
               ))}
+              <option value="__new__">+ Nowa grupa</option>
             </select>
-          )}
-          {onToggle && (
-            <button
-              onClick={() => onToggle(route.id, !route.isActive)}
-              className="rounded p-1 text-text-muted hover:bg-bg-tertiary hover:text-text-primary"
-              title={route.isActive ? 'Wstrzymaj' : 'Wznow'}
-            >
-              {route.isActive ? (
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6" />
-                </svg>
-              ) : (
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                </svg>
-              )}
-            </button>
           )}
           {onDelete && (
             <button

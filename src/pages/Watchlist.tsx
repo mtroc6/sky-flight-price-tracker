@@ -14,10 +14,6 @@ export default function Watchlist() {
     }
   }
 
-  const handleToggle = (id: number, isActive: boolean) => {
-    updateRoute.mutate({ id, isActive })
-  }
-
   const handleGroupChange = (id: number, group: string | null) => {
     updateRoute.mutate({ id, group })
   }
@@ -90,7 +86,7 @@ export default function Watchlist() {
                 route={route}
                 groups={groupNames}
                 onDelete={handleDelete}
-                onToggle={handleToggle}
+
                 onGroupChange={handleGroupChange}
               />
             ))}
@@ -111,7 +107,7 @@ export default function Watchlist() {
                 route={route}
                 groups={groupNames}
                 onDelete={handleDelete}
-                onToggle={handleToggle}
+
                 onGroupChange={handleGroupChange}
               />
             ))}
