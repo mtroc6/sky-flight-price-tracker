@@ -150,34 +150,17 @@ export default function RouteDetail() {
               <p className="mt-1 text-xs text-text-secondary sm:text-sm">
                 {route.originName} &rarr; {route.destinationName}
               </p>
-              <p className="mt-1 text-xs text-text-muted">Wylot: <span className="text-yellow">{route.departureDate}</span></p>
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-text-muted">Wylot: <span className="rounded bg-yellow/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-yellow">{route.departureDate}</span></p>
             </div>
 
             {route.currentMinPrice != null && (
-              <div className="flex items-center gap-3 sm:flex-col sm:items-end">
-                {route.trackingUrl && (
-                  <a
-                    href={route.trackingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-accent sm:order-2"
-                  >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    <span className="hidden sm:inline">Google Flights</span>
-                    <span className="sm:hidden">GF</span>
-                  </a>
-                )}
-                <div className="text-right sm:order-1">
-                  <PriceDisplay
-                    price={route.currentMinPrice / 100}
-                    previousPrice={route.price24hAgoCents ? route.price24hAgoCents / 100 : null}
-                    size="lg"
-                  />
-                  <p className="text-xs text-text-muted">Aktualna cena</p>
-                </div>
+              <div className="sm:text-right">
+                <PriceDisplay
+                  price={route.currentMinPrice / 100}
+                  previousPrice={route.price24hAgoCents ? route.price24hAgoCents / 100 : null}
+                  size="lg"
+                />
+                <p className="text-xs text-text-muted">Aktualna cena</p>
               </div>
             )}
           </div>
@@ -194,8 +177,8 @@ export default function RouteDetail() {
                 </div>
                 {route.bestDepartureTime && route.bestArrivalTime && (
                   <div className="flex items-center gap-2 font-mono text-text-muted">
-                    <span className="text-yellow">
-                      {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} → {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
+                    <span className="rounded bg-yellow/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-yellow sm:text-xs">
+                      {route.bestDepartureTime.split(' ')[1]?.slice(0, 5)} <span className="text-text-muted">&rarr;</span> {route.bestArrivalTime.split(' ')[1]?.slice(0, 5)}
                     </span>
                     {route.bestDuration != null && route.bestDuration > 0 && (
                       <span>
@@ -208,29 +191,44 @@ export default function RouteDetail() {
             </div>
           )}
 
-          {/* Last update + refresh */}
+          {/* Last update + refresh + Google Flights */}
           <div className="mt-4 space-y-2 border-t border-border pt-4">
             <p className="text-xs text-text-muted">
               {route.lastChecked ? `Aktualizacja: ${lastCheckedAgo}` : 'Brak danych'}
             </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={handleRefresh}
-                disabled={!canRefresh || isRefreshing}
-                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <svg
-                  className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleRefresh}
+                  disabled={!canRefresh || isRefreshing}
+                  className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {isRefreshing ? 'Odswiezam...' : 'Odswiez'}
-              </button>
-              {!canRefresh && remainingText && (
-                <span className="text-xs text-text-muted">{remainingText}</span>
+                  <svg
+                    className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {isRefreshing ? 'Odswiezam...' : 'Odswiez'}
+                </button>
+                {!canRefresh && remainingText && (
+                  <span className="text-xs text-text-muted">{remainingText}</span>
+                )}
+                <span className="text-[10px] text-text-muted">Auto: ~1h (7-22), ~3h (noc)</span>
+              </div>
+              {route.trackingUrl && (
+                <a
+                  href={route.trackingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-accent"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  Google Flights
+                </a>
               )}
-              <span className="text-[10px] text-text-muted">Auto: ~1h (7-22), ~3h (noc)</span>
             </div>
           </div>
           {refreshError && (
