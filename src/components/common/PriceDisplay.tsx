@@ -26,14 +26,14 @@ export function PriceDisplay({ price, previousPrice, size = 'md' }: PriceDisplay
   }
 
   return (
-    <div className="flex items-baseline gap-2">
-      <span className={clsx('font-mono font-bold text-text-primary', sizeClasses[size])}>
+    <div className="flex flex-col items-end">
+      <span className={clsx('font-mono font-bold text-text-primary whitespace-nowrap', sizeClasses[size])}>
         {converted.toLocaleString('pl-PL')} {symbol}
       </span>
       {prevConverted != null && diff !== 0 && (
         <span
           className={clsx(
-            'font-mono text-xs font-medium',
+            'font-mono text-[10px] font-medium whitespace-nowrap',
             isDown && 'text-green',
             isUp && 'text-red',
           )}
