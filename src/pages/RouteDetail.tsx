@@ -76,7 +76,6 @@ export default function RouteDetail() {
   const { id } = useParams<{ id: string }>()
   const routeId = Number(id)
   const [timeRange, setTimeRange] = useState<TimeRange>('1M')
-  const [chartType, setChartType] = useState<'candle' | 'line'>('candle')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshError, setRefreshError] = useState<string | null>(null)
   const queryClient = useQueryClient()
@@ -108,6 +107,16 @@ export default function RouteDetail() {
   const candleInterval = bestIntervalForRange(timeRange)
   const ohlcData = snapshotsToOHLC(filteredSnapshots, candleInterval)
   const lineData = snapshotsToPricePoints(filteredSnapshots)
+
+  // Range change stats
+  const rangeChange = (() => {
+    if (filteredSnapshots.length < 2) return null
+    const first = filteredSnapshots[0].priceCents
+    const last = filteredSnapshots[filteredSnapshots.length - 1].priceCents
+    const diff = last - first
+    const pct = ((diff / first) * 100).toFixed(1)
+    return { diff, pct, isDown: diff < 0 }
+  })()
 
   return (
     <div className="space-y-6">
@@ -244,31 +253,21 @@ export default function RouteDetail() {
           ))}
         </div>
 
-        <div className="flex w-full gap-1 rounded-lg bg-bg-secondary p-1 sm:w-auto">
-          <button
-            onClick={() => setChartType('candle')}
-            className={`flex-1 rounded-md px-3 py-1 text-center text-xs font-medium transition-colors sm:flex-none ${
-              chartType === 'candle' ? 'bg-accent/10 text-accent' : 'text-text-muted hover:text-text-primary'
-            }`}
-          >
-            Swiece
-          </button>
-          <button
-            onClick={() => setChartType('line')}
-            className={`flex-1 rounded-md px-3 py-1 text-center text-xs font-medium transition-colors sm:flex-none ${
-              chartType === 'line' ? 'bg-accent/10 text-accent' : 'text-text-muted hover:text-text-primary'
-            }`}
-          >
-            Liniowy
-          </button>
-        </div>
+        {rangeChange && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-text-muted">Zmiana {rangeLabels[timeRange]}:</span>
+            <span className={`font-mono text-sm font-bold ${rangeChange.isDown ? 'text-green' : 'text-red'}`}>
+              {rangeChange.isDown ? '' : '+'}{formatPrice(rangeChange.diff)} ({rangeChange.isDown ? '' : '+'}{rangeChange.pct}%)
+            </span>
+          </div>
+        )}
       </div>
 
       {isLoading && <LoadingSpinner />}
 
-      {/* Charts */}
-      {!isLoading && chartType === 'candle' && <CandlestickChart data={ohlcData} showTime={candleInterval === 'hourly'} />}
-      {!isLoading && chartType === 'line' && <PriceLineChart data={lineData} />}
+      {/* Charts — candles on top, line below */}
+      {!isLoading && <CandlestickChart data={ohlcData} showTime={candleInterval === 'hourly'} />}
+      {!isLoading && <PriceLineChart data={lineData} />}
 
       {/* Stats */}
       {filteredSnapshots.length > 0 && (

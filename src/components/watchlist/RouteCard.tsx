@@ -11,6 +11,8 @@ interface RouteCardProps {
 }
 
 export function RouteCard({ route, groups = [], onDelete, onGroupChange }: RouteCardProps) {
+  const isArchived = new Date(route.departureDate + 'T23:59:59') < new Date()
+
   return (
     <Link
       to={`/route/${route.id}`}
@@ -79,14 +81,18 @@ export function RouteCard({ route, groups = [], onDelete, onGroupChange }: Route
         <div className="flex items-center gap-1.5">
           <div
             className={clsx(
-              'h-1.5 w-1.5 flex-shrink-0 rounded-full',
-              route.isActive ? 'bg-green' : 'bg-text-muted',
+              'h-2 w-2 flex-shrink-0 rounded-full',
+              isArchived
+                ? 'border border-green bg-transparent'
+                : route.isActive ? 'bg-green' : 'bg-text-muted',
             )}
           />
           <span className="whitespace-nowrap text-[10px] text-text-muted">
-            {route.lastChecked
-              ? new Date(route.lastChecked).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-              : route.isActive ? 'Aktywna' : 'Wstrzymana'}
+            {isArchived
+              ? 'Archiwalny'
+              : route.lastChecked
+                ? new Date(route.lastChecked).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : 'Aktywna'}
           </span>
         </div>
 
