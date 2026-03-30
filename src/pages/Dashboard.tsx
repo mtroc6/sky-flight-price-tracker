@@ -121,8 +121,8 @@ export default function Dashboard() {
                   {route.bestAirline && <span className="ml-2 text-text-secondary">{route.bestAirline}</span>}
                 </div>
 
-                {route.currentMinPrice != null && route.previousMinPrice != null && route.currentMinPrice !== route.previousMinPrice && (
-                  <PriceChange current={route.currentMinPrice} previous={route.previousMinPrice} />
+                {route.currentMinPrice != null && route.price24hAgoCents != null && route.currentMinPrice !== route.price24hAgoCents && (
+                  <PriceChange current={route.currentMinPrice} previous={route.price24hAgoCents} />
                 )}
               </Link>
             ))}

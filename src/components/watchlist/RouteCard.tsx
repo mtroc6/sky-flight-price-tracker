@@ -64,7 +64,7 @@ export function RouteCard({ route, groups = [], onDelete, onGroupChange }: Route
           {route.currentMinPrice != null && (
             <PriceDisplay
               price={route.currentMinPrice / 100}
-              previousPrice={route.previousMinPrice ? route.previousMinPrice / 100 : null}
+              previousPrice={route.price24hAgoCents ? route.price24hAgoCents / 100 : null}
               size="sm"
             />
           )}
