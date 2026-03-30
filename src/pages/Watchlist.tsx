@@ -1,12 +1,97 @@
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useWatchlist, useDeleteFromWatchlist, useUpdateWatchlist } from '../hooks/useWatchlist'
 import { RouteCard } from '../components/watchlist/RouteCard'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 
+const GROUP_ORDER_KEY = 'sky-group-order'
+
+function loadGroupOrder(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(GROUP_ORDER_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
+
+function saveGroupOrder(order: string[]) {
+  localStorage.setItem(GROUP_ORDER_KEY, JSON.stringify(order))
+}
+
+function GroupMenu({ groupName, index, total, onRename, onMove }: {
+  groupName: string
+  index: number
+  total: number
+  onRename: (oldName: string) => void
+  onMove: (name: string, direction: 'up' | 'down') => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="rounded p-1 text-text-muted hover:bg-bg-tertiary hover:text-text-primary"
+        title="Edytuj grupe"
+      >
+        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute left-0 z-10 mt-1 w-44 rounded-lg border border-border bg-bg-card py-1 shadow-lg">
+          <button
+            onClick={() => { setOpen(false); onRename(groupName) }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text-primary"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            Zmien nazwe
+          </button>
+          {index > 0 && (
+            <button
+              onClick={() => { setOpen(false); onMove(groupName, 'up') }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text-primary"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+              </svg>
+              Przesun w gore
+            </button>
+          )}
+          {index < total - 1 && (
+            <button
+              onClick={() => { setOpen(false); onMove(groupName, 'down') }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text-primary"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+              Przesun w dol
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Watchlist() {
   const { data: routes, isLoading } = useWatchlist()
   const deleteRoute = useDeleteFromWatchlist()
   const updateRoute = useUpdateWatchlist()
+  const [groupOrder, setGroupOrder] = useState<string[]>(loadGroupOrder)
 
   const handleDelete = (id: number) => {
     if (confirm('Na pewno chcesz usunac ten lot?')) {
@@ -34,7 +119,37 @@ export default function Watchlist() {
     }
   }
 
-  const groupNames = [...grouped.keys()].sort()
+  // Sort groups: use saved order first, then alphabetical for any new groups
+  const allGroups = [...grouped.keys()]
+  const orderedGroups = groupOrder.filter((g) => allGroups.includes(g))
+  const newGroups = allGroups.filter((g) => !orderedGroups.includes(g)).sort()
+  const groupNames = [...orderedGroups, ...newGroups]
+
+  const handleMoveGroup = (name: string, direction: 'up' | 'down') => {
+    const idx = groupNames.indexOf(name)
+    if (idx === -1) return
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= groupNames.length) return
+    const newOrder = [...groupNames]
+    ;[newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]]
+    setGroupOrder(newOrder)
+    saveGroupOrder(newOrder)
+  }
+
+  const handleRenameGroup = (oldName: string) => {
+    const newName = prompt('Nowa nazwa grupy:', oldName)
+    if (!newName?.trim() || newName.trim() === oldName) return
+    const trimmed = newName.trim()
+    // Update all routes in this group
+    const groupRoutes = grouped.get(oldName) || []
+    for (const route of groupRoutes) {
+      updateRoute.mutate({ id: route.id, group: trimmed })
+    }
+    // Update saved order
+    const newOrder = groupNames.map((g) => g === oldName ? trimmed : g)
+    setGroupOrder(newOrder)
+    saveGroupOrder(newOrder)
+  }
 
   return (
     <div className="space-y-6">
@@ -78,6 +193,13 @@ export default function Watchlist() {
             </svg>
             {groupName}
             <span className="text-sm font-normal text-text-muted">({grouped.get(groupName)?.length})</span>
+            <GroupMenu
+              groupName={groupName}
+              index={groupNames.indexOf(groupName)}
+              total={groupNames.length}
+              onRename={handleRenameGroup}
+              onMove={handleMoveGroup}
+            />
           </h2>
           <div className="grid gap-4 lg:grid-cols-2">
             {grouped.get(groupName)!.map((route) => (
