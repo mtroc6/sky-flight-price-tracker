@@ -106,7 +106,7 @@ export default function Dashboard() {
                     <span className="text-text-muted">&rarr;</span>
                     <span className="font-mono text-sm font-bold text-accent">{route.destinationCode}</span>
                     {route.flightNumber && (
-                      <span className="font-mono text-[10px] text-text-muted">{route.flightNumber}</span>
+                      <span className="rounded bg-blue/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-blue">{route.flightNumber}</span>
                     )}
                   </div>
                   {route.currentMinPrice != null && (
