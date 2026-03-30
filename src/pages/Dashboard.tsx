@@ -92,9 +92,9 @@ export default function Dashboard() {
 
       {!isLoading && activeRoutes.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-text-primary">Obserwowane trasy</h2>
+          <h2 className="text-lg font-semibold text-text-primary">Ostatnio dodane trasy</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {activeRoutes.map((route) => (
+            {activeRoutes.slice(0, 3).map((route) => (
               <Link
                 key={route.id}
                 to={`/route/${route.id}`}
@@ -121,12 +121,22 @@ export default function Dashboard() {
                   {route.bestAirline && <span className="ml-2 text-text-secondary">{route.bestAirline}</span>}
                 </div>
 
-                {route.currentMinPrice != null && route.previousMinPrice != null && route.currentMinPrice !== route.previousMinPrice && (
-                  <PriceChange current={route.currentMinPrice} previous={route.previousMinPrice} />
+                {route.currentMinPrice != null && route.price24hAgoCents != null && route.currentMinPrice !== route.price24hAgoCents && (
+                  <PriceChange current={route.currentMinPrice} previous={route.price24hAgoCents} />
                 )}
               </Link>
             ))}
           </div>
+          {activeRoutes.length > 3 && (
+            <div className="flex justify-center">
+              <Link
+                to="/watchlist"
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary"
+              >
+                Pokaz wiecej ({activeRoutes.length - 3})
+              </Link>
+            </div>
+          )}
         </div>
       )}
 

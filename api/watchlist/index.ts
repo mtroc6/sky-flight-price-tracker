@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getDb } from '../../src/lib/db'
 import { watchedRoutes, priceSnapshots } from '../../src/lib/schema'
-import { desc, eq, and } from 'drizzle-orm'
+import { desc, eq, and, lte, inArray } from 'drizzle-orm'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const db = getDb()
@@ -12,7 +12,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .select()
         .from(watchedRoutes)
         .orderBy(desc(watchedRoutes.createdAt))
-      return res.status(200).json({ data: routes })
+
+      // Fetch price from ~24h ago for each route
+      const routeIds = routes.map((r) => r.id)
+      const prices24h: Record<number, number> = {}
+
+      if (routeIds.length > 0) {
+        const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
+
+        // Get the latest snapshot before 24h ago for each route
+        const snapshots = await db
+          .select({
+            routeId: priceSnapshots.routeId,
+            priceCents: priceSnapshots.priceCents,
+            fetchedAt: priceSnapshots.fetchedAt,
+          })
+          .from(priceSnapshots)
+          .where(
+            and(
+              inArray(priceSnapshots.routeId, routeIds),
+              lte(priceSnapshots.fetchedAt, cutoff),
+            )
+          )
+          .orderBy(desc(priceSnapshots.fetchedAt))
+
+        // Pick latest per route
+        for (const snap of snapshots) {
+          if (!(snap.routeId in prices24h)) {
+            prices24h[snap.routeId] = snap.priceCents
+          }
+        }
+      }
+
+      const data = routes.map((r) => ({
+        ...r,
+        price24hAgoCents: prices24h[r.id] ?? null,
+      }))
+
+      return res.status(200).json({ data })
     } catch (err) {
       return res.status(500).json({ error: (err as Error).message })
     }
