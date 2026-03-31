@@ -39,10 +39,10 @@ async function sendNtfyNotification(
   const dateTime = route.departureDate + (route.bestDepartureTime
     ? ' ' + route.bestDepartureTime.split(' ')[1]?.slice(0, 5)
     : '')
-  const title = `${route.originCode} → ${route.destinationCode} · ${dateTime}`
+  const title = `${route.originCode} -> ${route.destinationCode} | ${dateTime}`
   const body = isDown
-    ? `${newPrice} PLN — spadek ${Math.abs(parseFloat(pct))}% (${diff} PLN)`
-    : `${newPrice} PLN — wzrost ${pct}% (+${diff} PLN)`
+    ? `${newPrice} PLN - spadek ${Math.abs(parseFloat(pct))}% (${diff} PLN)`
+    : `${newPrice} PLN - wzrost ${pct}% (+${diff} PLN)`
 
   try {
     await fetch(`https://ntfy.sh/${topic}`, {
