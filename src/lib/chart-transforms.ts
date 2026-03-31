@@ -31,6 +31,7 @@ export function snapshotsToOHLC(snapshots: PriceSnapshot[], interval: CandleInte
 
   const grouped = new Map<string, number[]>()
   for (const s of snapshots) {
+    if (s.priceCents == null) continue
     const key = getGroupKey(s.fetchedAt, interval)
     const existing = grouped.get(key) || []
     existing.push(s.priceCents)
@@ -50,10 +51,11 @@ export function snapshotsToOHLC(snapshots: PriceSnapshot[], interval: CandleInte
 
 export function snapshotsToPricePoints(snapshots: PriceSnapshot[]): PricePoint[] {
   return snapshots
+    .filter((s) => s.priceCents != null)
     .sort((a, b) => a.fetchedAt.localeCompare(b.fetchedAt))
     .map((s) => ({
       time: toUnix(s.fetchedAt),
-      price: s.priceCents / 100,
+      price: s.priceCents! / 100,
       airline: s.airline || undefined,
     }))
 }

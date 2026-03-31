@@ -108,11 +108,12 @@ export default function RouteDetail() {
   const ohlcData = snapshotsToOHLC(filteredSnapshots, candleInterval)
   const lineData = snapshotsToPricePoints(filteredSnapshots)
 
-  // Range change stats
+  // Range change stats (exclude error snapshots)
+  const priceSnapshots = filteredSnapshots.filter(s => s.priceCents != null)
   const rangeChange = (() => {
-    if (filteredSnapshots.length < 2) return null
-    const first = filteredSnapshots[0].priceCents
-    const last = filteredSnapshots[filteredSnapshots.length - 1].priceCents
+    if (priceSnapshots.length < 2) return null
+    const first = priceSnapshots[0].priceCents!
+    const last = priceSnapshots[priceSnapshots.length - 1].priceCents!
     const diff = last - first
     const pct = ((diff / first) * 100).toFixed(1)
     return { diff, pct, isDown: diff < 0 }
@@ -288,25 +289,25 @@ export default function RouteDetail() {
       {!isLoading && <PriceLineChart data={lineData} />}
 
       {/* Stats */}
-      {filteredSnapshots.length > 0 && (
+      {priceSnapshots.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           <StatBox
             label="Minimum"
-            value={formatPrice(Math.min(...filteredSnapshots.map((s) => s.priceCents)))}
+            value={formatPrice(Math.min(...priceSnapshots.map((s) => s.priceCents!)))}
             type="green"
           />
           <StatBox
             label="Maksimum"
-            value={formatPrice(Math.max(...filteredSnapshots.map((s) => s.priceCents)))}
+            value={formatPrice(Math.max(...priceSnapshots.map((s) => s.priceCents!)))}
             type="red"
           />
           <StatBox
             label="Srednia"
-            value={formatPrice(Math.round(filteredSnapshots.reduce((s, x) => s + x.priceCents, 0) / filteredSnapshots.length))}
+            value={formatPrice(Math.round(priceSnapshots.reduce((s, x) => s + x.priceCents!, 0) / priceSnapshots.length))}
           />
           <StatBox
             label="Punkty danych"
-            value={String(filteredSnapshots.length)}
+            value={String(priceSnapshots.length)}
           />
         </div>
       )}
@@ -331,10 +332,12 @@ export default function RouteDetail() {
               </thead>
               <tbody>
                 {[...filteredSnapshots].reverse().map((snap, i, arr) => {
+                  const isError = !!snap.error
                   const prevSnap = arr[i + 1]
-                  const change = prevSnap ? snap.priceCents - prevSnap.priceCents : 0
+                  const change = !isError && prevSnap && prevSnap.priceCents != null && snap.priceCents != null
+                    ? snap.priceCents - prevSnap.priceCents : 0
                   return (
-                    <tr key={snap.id} className="border-b border-border/30 hover:bg-bg-tertiary/50">
+                    <tr key={snap.id} className={`border-b border-border/30 ${isError ? 'bg-red/5' : 'hover:bg-bg-tertiary/50'}`}>
                       <td className="px-4 py-2 font-mono text-xs text-text-secondary">
                         {new Date(snap.fetchedAt).toLocaleString('pl-PL', {
                           day: '2-digit', month: '2-digit', year: 'numeric',
@@ -342,29 +345,36 @@ export default function RouteDetail() {
                         })}
                       </td>
                       <td className="px-4 py-2 font-mono font-semibold text-text-primary">
-                        {formatPrice(snap.priceCents)}
+                        {isError
+                          ? <span className="text-red text-xs font-normal">{snap.error}</span>
+                          : formatPrice(snap.priceCents ?? 0)
+                        }
                       </td>
                       <td className="px-4 py-2 font-mono text-xs">
-                        {change !== 0 && (
+                        {!isError && change !== 0 && (
                           <span className={change < 0 ? 'text-green' : 'text-red'}>
                             {change > 0 ? '+' : ''}{formatPrice(Math.abs(change))}
                           </span>
                         )}
-                        {change === 0 && i < arr.length - 1 && (
+                        {!isError && change === 0 && i < arr.length - 1 && (
                           <span className="text-text-muted">—</span>
                         )}
                       </td>
                       <td className="px-4 py-2 text-xs text-text-secondary">{snap.airline || '—'}</td>
                       <td className="px-4 py-2 text-xs text-text-muted">
-                        {snap.stops === 0 ? 'Bezposredni' : `${snap.stops}`}
+                        {isError ? '—' : snap.stops === 0 ? 'Bezposredni' : `${snap.stops}`}
                       </td>
                       <td className="px-4 py-2">
                         <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                          isError ? 'bg-red/15 text-red' :
                           snap.source === 'serpapi' ? 'bg-blue/10 text-blue' :
                           snap.source === 'google' ? 'bg-accent/10 text-accent' :
                           'bg-text-muted/10 text-text-muted'
                         }`}>
-                          {snap.source === 'serpapi' ? 'SerpApi' : snap.source === 'google' ? 'Scraper' : snap.source}
+                          {isError
+                            ? (snap.source === 'serpapi' ? 'SerpApi' : 'Scraper')
+                            : snap.source === 'serpapi' ? 'SerpApi' : snap.source === 'google' ? 'Scraper' : snap.source
+                          }
                         </span>
                       </td>
                     </tr>

@@ -24,10 +24,11 @@ export interface WatchedRoute {
 export interface PriceSnapshot {
   id: number
   routeId: number
-  priceCents: number
+  priceCents: number | null
   airline: string | null
   stops: number
   source: 'serpapi' | 'google'
+  error: string | null
   fetchedAt: string
 }
 

@@ -33,10 +33,11 @@ export const groupSettings = pgTable('group_settings', {
 export const priceSnapshots = pgTable('price_snapshots', {
   id: serial('id').primaryKey(),
   routeId: integer('route_id').notNull().references(() => watchedRoutes.id, { onDelete: 'cascade' }),
-  priceCents: integer('price_cents').notNull(),
+  priceCents: integer('price_cents'),
   airline: text('airline'),
   stops: integer('stops').notNull().default(0),
   source: text('source', { enum: ['serpapi', 'google'] }).notNull().default('google'),
+  error: text('error'),
   fetchedAt: timestamp('fetched_at').notNull().defaultNow(),
 }, (table) => [
   index('idx_snapshots_route').on(table.routeId),

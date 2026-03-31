@@ -113,17 +113,26 @@ export async function getMinPrice(
   }
 
   const res = await fetch(url.toString())
-  if (!res.ok) return null
+  if (!res.ok) {
+    console.error(`[getMinPrice] HTTP ${res.status} for ${origin}→${destination} on ${departureDate}`)
+    return null
+  }
 
   const json = await res.json()
-  if (json.error) return null
+  if (json.error) {
+    console.error(`[getMinPrice] SerpApi error for ${origin}→${destination} on ${departureDate}:`, json.error)
+    return null
+  }
 
   const allFlights = [
     ...(json.best_flights || []),
     ...(json.other_flights || []),
   ]
 
-  if (allFlights.length === 0) return null
+  if (allFlights.length === 0) {
+    console.warn(`[getMinPrice] No flights found for ${origin}→${destination} on ${departureDate}`)
+    return null
+  }
 
   // Find cheapest
   const cheapest = allFlights.reduce((min: Record<string, unknown>, f: Record<string, unknown>) =>

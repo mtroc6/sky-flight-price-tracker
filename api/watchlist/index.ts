@@ -76,6 +76,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(409).json({ error: 'Ten lot jest juz obserwowany' })
       }
 
+      // Ensure tracking URL has Polish locale and PLN currency
+      let trackingUrl = body.trackingUrl || null
+      if (trackingUrl) {
+        const u = new URL(trackingUrl)
+        if (!u.searchParams.has('hl')) u.searchParams.set('hl', 'pl')
+        if (!u.searchParams.has('curr')) u.searchParams.set('curr', 'PLN')
+        trackingUrl = u.toString()
+      }
+
       // Create route with all flight details
       const [route] = await db
         .insert(watchedRoutes)
@@ -86,7 +95,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           destinationName: body.destinationName,
           departureDate: body.departureDate,
           flightNumber: body.flightNumber || null,
-          trackingUrl: body.trackingUrl || null,
+          trackingUrl,
           bestAirline: body.airline || null,
           bestDepartureTime: body.departureTime || null,
           bestArrivalTime: body.arrivalTime || null,

@@ -90,6 +90,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (!matched) {
+      console.warn(`[refresh] No match for ${route.flightNumber} (depTime=${savedDepTime}, airlineCode=${airlineCode}) among ${flights.length} flights`)
+      console.warn(`[refresh] Available flights:`, flights.map(f => `${f.airlineCode} ${f.flightNumber} dep=${f.departureTime}`))
       return res.status(200).json({ data: null, message: `Nie znaleziono lotu ${route.flightNumber} (${savedDepTime})` })
     }
 

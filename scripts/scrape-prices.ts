@@ -142,6 +142,15 @@ async function main() {
       console.log(`  ✓ ${label}: ${priceData.price} PLN`)
       results.push({ routeId: route.id, success: true, price: priceCents })
     } else {
+      await db.insert(schema.priceSnapshots).values({
+        routeId: route.id,
+        priceCents: null,
+        airline: route.bestAirline,
+        stops: route.bestStops ?? 0,
+        source: 'google',
+        error: 'Nie znaleziono ceny',
+      })
+
       console.log(`  ✗ ${label}: no price found`)
       results.push({ routeId: route.id, success: false })
     }
