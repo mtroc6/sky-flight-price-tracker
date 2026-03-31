@@ -28,6 +28,7 @@ export const groupSettings = pgTable('group_settings', {
   id: serial('id').primaryKey(),
   name: text('name').notNull().unique(),
   sortOrder: integer('sort_order').notNull().default(0),
+  ntfyTopic: text('ntfy_topic'),
 })
 
 export const priceSnapshots = pgTable('price_snapshots', {

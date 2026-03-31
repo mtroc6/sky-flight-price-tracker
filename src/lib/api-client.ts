@@ -66,12 +66,18 @@ export const api = {
 
   groups: {
     list: () =>
-      request<{ data: { name: string; sortOrder: number }[] }>('/watchlist/groups'),
+      request<{ data: { name: string; sortOrder: number; ntfyTopic: string | null }[] }>('/watchlist/groups'),
 
     saveOrder: (groups: string[]) =>
       request<{ data: string[] }>('/watchlist/groups', {
         method: 'PUT',
         body: JSON.stringify({ groups }),
+      }),
+
+    setNotifications: (name: string, ntfyTopic: string | null) =>
+      request<{ data: { name: string; ntfyTopic: string | null } }>('/watchlist/groups', {
+        method: 'PATCH',
+        body: JSON.stringify({ name, ntfyTopic }),
       }),
   },
 

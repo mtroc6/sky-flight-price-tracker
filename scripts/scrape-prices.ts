@@ -2,6 +2,7 @@
  * Playwright Google Flights price scraper
  * Loads each watched route's trackingUrl and extracts the current price.
  * Writes directly to Neon DB.
+ * Sends ntfy.sh push notifications on price changes.
  */
 
 import { chromium } from 'playwright'
@@ -21,6 +22,43 @@ const db = drizzle(sql, { schema })
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function sendNtfyNotification(
+  topic: string,
+  route: typeof schema.watchedRoutes.$inferSelect,
+  oldPriceCents: number,
+  newPriceCents: number,
+) {
+  const oldPrice = oldPriceCents / 100
+  const newPrice = newPriceCents / 100
+  const diff = newPrice - oldPrice
+  const pct = ((diff / oldPrice) * 100).toFixed(1)
+  const isDown = diff < 0
+
+  const dateTime = route.departureDate + (route.bestDepartureTime
+    ? ' ' + route.bestDepartureTime.split(' ')[1]?.slice(0, 5)
+    : '')
+  const title = `${route.originCode} → ${route.destinationCode} · ${dateTime}`
+  const body = isDown
+    ? `${newPrice} PLN — spadek ${Math.abs(parseFloat(pct))}% (${diff} PLN)`
+    : `${newPrice} PLN — wzrost ${pct}% (+${diff} PLN)`
+
+  try {
+    await fetch(`https://ntfy.sh/${topic}`, {
+      method: 'POST',
+      body,
+      headers: {
+        'Title': title,
+        'Tags': isDown ? 'chart_with_downwards_trend' : 'chart_with_upwards_trend',
+        'Priority': isDown ? '4' : '3',
+        ...(route.trackingUrl ? { 'Click': route.trackingUrl } : {}),
+      },
+    })
+    console.log(`  📨 ntfy → ${topic}: ${body}`)
+  } catch (err) {
+    console.error(`  ⚠ ntfy error: ${(err as Error).message}`)
+  }
 }
 
 async function scrapePrice(
@@ -99,6 +137,13 @@ async function main() {
     return
   }
 
+  // Load group ntfy topics
+  const groupRows = await db.select().from(schema.groupSettings)
+  const ntfyTopics = new Map(
+    groupRows.filter(g => g.ntfyTopic).map(g => [g.name, g.ntfyTopic!])
+  )
+  console.log(`Ntfy topics: ${ntfyTopics.size} group(s) with notifications`)
+
   const browser = await chromium.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -141,6 +186,11 @@ async function main() {
 
       console.log(`  ✓ ${label}: ${priceData.price} PLN`)
       results.push({ routeId: route.id, success: true, price: priceCents })
+
+      // Send ntfy notification if price changed
+      if (route.group && ntfyTopics.has(route.group) && route.currentMinPrice && route.currentMinPrice !== priceCents) {
+        await sendNtfyNotification(ntfyTopics.get(route.group)!, route, route.currentMinPrice, priceCents)
+      }
     } else {
       await db.insert(schema.priceSnapshots).values({
         routeId: route.id,
